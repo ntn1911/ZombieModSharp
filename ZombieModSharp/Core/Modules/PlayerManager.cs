@@ -70,4 +70,7 @@ public class Player
     public float SoundVolume { get; set; } = 100.0f;
     public Guid MoanTimer { get; set; }
     public float ZombiePainTime { get; set; }
+
+    // weapon purchase count
+    public Dictionary<string, int> PurchaseHistory { get; set; } = [];
 }

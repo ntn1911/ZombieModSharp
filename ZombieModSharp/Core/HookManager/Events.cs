@@ -232,6 +232,11 @@ public class Events : IEvents, IEventListener
         if (team == CStrikeTeam.UnAssigned || team == CStrikeTeam.Spectator)
             return;
 
+        var player = _playerManager.GetOrCreatePlayer(client);
+
+        // we clear all player history here.
+        player.PurchaseHistory.Clear();
+
             // infect or
         _modSharp.PushTimer(() =>
         {
@@ -247,7 +252,7 @@ public class Events : IEvents, IEventListener
 
                 else
                 {
-                    var zombie = _playerManager.GetOrCreatePlayer(client).IsInfected();
+                    var zombie = player.IsInfected();
 
                     if(zombie)
                         _infect.InfectPlayer(client);

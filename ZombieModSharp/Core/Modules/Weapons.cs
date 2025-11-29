@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Sharp.Extensions.CommandManager;
 using Sharp.Shared;
+using Sharp.Shared.Enums;
 using Sharp.Shared.Objects;
 using Sharp.Shared.Types;
 using ZombieModSharp.Abstractions;
@@ -25,16 +26,18 @@ public class Weapons : IWeapons
     private readonly IModSharp _modsharp;
     private readonly ICommandManager _commandManager;
     private readonly ICommand _command;
+    private readonly IPlayerManager _playerManager;
 
     private Dictionary<string, WeaponData> weaponDatas = [];
 
-    public Weapons(ISharedSystem sharedSystem, ILogger<Weapons> logger, ICommandManager commandManager, ICommand command)
+    public Weapons(ISharedSystem sharedSystem, ILogger<Weapons> logger, ICommandManager commandManager, ICommand command, IPlayerManager playerManager)
     {
         _sharedSystem = sharedSystem;
         _logger = _sharedSystem.GetLoggerFactory().CreateLogger<Weapons>();
         _modsharp = _sharedSystem.GetModSharp();
         _commandManager = commandManager;
         _command = command;
+        _playerManager = playerManager;
     }
 
     public void LoadConfig(string path)
@@ -63,8 +66,8 @@ public class Weapons : IWeapons
             var cleanedJson = string.Join('\n', cleanedLines);
 
             weaponDatas = JsonSerializer.Deserialize<Dictionary<string, WeaponData>>(cleanedJson) ?? [];
-
             _logger.LogInformation("Successfully loaded {count} weapon configurations", weaponDatas.Count);
+            AssignWeaponPurchaseCommand();
         }
         catch (Exception ex)
         {
@@ -72,8 +75,11 @@ public class Weapons : IWeapons
         }
     }
 
-    public void AssignWeaponPurchaseCommand()
+    private void AssignWeaponPurchaseCommand()
     {
+        if(weaponDatas == null || weaponDatas.Count <= 0)
+            return;
+
         foreach(var weapon in weaponDatas)
         {
             if(weapon.Value.Command == null || weapon.Value.Command.Count <= 0)
@@ -86,32 +92,55 @@ public class Weapons : IWeapons
         }
     }
 
-    public void OnPurchaseWeaponCommand(IGameClient client, StringCommand command)
+    private void OnPurchaseWeaponCommand(IGameClient client, StringCommand command)
     {
         var arg = command.GetArg(0);
-        var weaponData = weaponDatas.FirstOrDefault(w => w.Value.Command.Contains(arg)).Value;
+        var weaponData = weaponDatas.FirstOrDefault(w => w.Value.Command.Contains(arg));
 
-        if(weaponData == null)
+        if(weaponData.Value == null)
         {
             _command.ReplyToCommand(client, "Invalid weapon command!");
             return;
         }
 
-        PurchaseWeapon(client, weaponData);
+        PurchaseWeapon(client, weaponData.Key, weaponData.Value);
     }
 
-    public void PurchaseWeapon(IGameClient client, WeaponData weapon)
+    private void PurchaseWeapon(IGameClient client, string weaponname, WeaponData weapon)
     {
-        var controller = client.GetPlayerController();
-        var pawn = controller?.GetPlayerPawn();
-        
+        var pawn = client.GetPlayerController()?.GetPlayerPawn();
+        var player = _playerManager.GetOrCreatePlayer(client);
+
         if(weapon.Restrict)
         {
             _command.ReplyToCommand(client, $"weapon \x05{weapon.EntityName}\x01 is restricted");
             return;
         }
 
-        
+        if(pawn == null)
+        {
+            return;
+        }
+
+        if(pawn.Team <= CStrikeTeam.Spectator)
+        {
+            _command.ReplyToCommand(client, "This feature require player to be in team.");
+            return;
+        }
+
+        if(!pawn.IsAlive)
+        {
+            _command.ReplyToCommand(client, "This feature require player to be alive.");
+            return;
+        }
+
+        if(player.IsInfected())
+        {
+            _command.ReplyToCommand(client, "This feautre require player to be human.");
+            return;
+        }
+
+        pawn.GiveNamedItem(weapon.EntityName);
     }
 
     public float GetWeaponKnockback(string weaponentity)
