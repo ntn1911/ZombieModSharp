@@ -1,6 +1,9 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using Sharp.Extensions.CommandManager;
 using Sharp.Shared;
+using Sharp.Shared.Objects;
+using Sharp.Shared.Types;
 using ZombieModSharp.Abstractions;
 
 namespace ZombieModSharp.Core.Modules;
@@ -9,6 +12,10 @@ public class WeaponData
 {
     public required string EntityName { get; set; }
     public float Knockback { get; set; } = 1.0f;
+    public bool Restrict { get; set; } = false;
+    public int MaxPurchase { get; set; } = -1;
+    public List<string> Command { get; set; } = [];
+    public int Price { get; set; }
 }
 
 public class Weapons : IWeapons
@@ -16,14 +23,18 @@ public class Weapons : IWeapons
     private readonly ISharedSystem _sharedSystem;
     private readonly ILogger<Weapons> _logger;
     private readonly IModSharp _modsharp;
+    private readonly ICommandManager _commandManager;
+    private readonly ICommand _command;
 
     private Dictionary<string, WeaponData> weaponDatas = [];
 
-    public Weapons(ISharedSystem sharedSystem, ILogger<Weapons> logger)
+    public Weapons(ISharedSystem sharedSystem, ILogger<Weapons> logger, ICommandManager commandManager, ICommand command)
     {
         _sharedSystem = sharedSystem;
         _logger = _sharedSystem.GetLoggerFactory().CreateLogger<Weapons>();
         _modsharp = _sharedSystem.GetModSharp();
+        _commandManager = commandManager;
+        _command = command;
     }
 
     public void LoadConfig(string path)
@@ -59,6 +70,48 @@ public class Weapons : IWeapons
         {
             _logger.LogError(ex, "Failed to parse weapons configuration");
         }
+    }
+
+    public void AssignWeaponPurchaseCommand()
+    {
+        foreach(var weapon in weaponDatas)
+        {
+            if(weapon.Value.Command == null || weapon.Value.Command.Count <= 0)
+                continue;
+
+            foreach(var command in weapon.Value.Command)
+            {
+                _commandManager.RegisterClientCommand(command, OnPurchaseWeaponCommand);
+            }
+        }
+    }
+
+    public void OnPurchaseWeaponCommand(IGameClient client, StringCommand command)
+    {
+        var arg = command.GetArg(0);
+        var weaponData = weaponDatas.FirstOrDefault(w => w.Value.Command.Contains(arg)).Value;
+
+        if(weaponData == null)
+        {
+            _command.ReplyToCommand(client, "Invalid weapon command!");
+            return;
+        }
+
+        PurchaseWeapon(client, weaponData);
+    }
+
+    public void PurchaseWeapon(IGameClient client, WeaponData weapon)
+    {
+        var controller = client.GetPlayerController();
+        var pawn = controller?.GetPlayerPawn();
+        
+        if(weapon.Restrict)
+        {
+            _command.ReplyToCommand(client, $"weapon \x05{weapon.EntityName}\x01 is restricted");
+            return;
+        }
+
+        
     }
 
     public float GetWeaponKnockback(string weaponentity)

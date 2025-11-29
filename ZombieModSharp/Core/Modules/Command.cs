@@ -211,7 +211,7 @@ public class Command : ICommand
         _grenadeEffect.IgnitePawn(player, 1, 5);
     }
 
-    private void ReplyToCommand(IGameClient client, string text)
+    public void ReplyToCommand(IGameClient client, string text)
     {
         if (client == null)
         {
