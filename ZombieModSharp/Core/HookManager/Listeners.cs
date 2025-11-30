@@ -32,8 +32,9 @@ public class Listeners : IListeners, IClientListener, IGameListener, IEntityList
     private readonly IPrecacheManager _precacheManager;
     private readonly IRespawnServices _respawnServices;
     private readonly IEntityManager _entityManager;
+    private readonly IWeapons _weapons;
 
-    public Listeners(IPlayerManager playerManager, ISharedSystem sharedSystem, ISqliteDatabase sqlite, ICvarServices cvarServices, IPlayerClasses playerClasses, IPrecacheManager precacheManager, IRespawnServices respawnServices)
+    public Listeners(IPlayerManager playerManager, ISharedSystem sharedSystem, ISqliteDatabase sqlite, ICvarServices cvarServices, IPlayerClasses playerClasses, IPrecacheManager precacheManager, IRespawnServices respawnServices, IWeapons weapons)
     {
         _playerManager = playerManager;
         _sharedSystem = sharedSystem;
@@ -45,6 +46,7 @@ public class Listeners : IListeners, IClientListener, IGameListener, IEntityList
         _precacheManager = precacheManager;
         _respawnServices = respawnServices;
         _entityManager = _sharedSystem.GetEntityManager();
+        _weapons = weapons;
     }
 
     public void Init()
@@ -201,5 +203,20 @@ public class Listeners : IListeners, IClientListener, IGameListener, IEntityList
         }
 
         return EHookAction.Ignored;
+    }
+
+    public void OnEntitySpawned(IBaseEntity entity)
+    {
+        if(entity.Classname.Contains("weapon_"))
+        {
+            var weapon = entity.AsBaseWeapon();
+            var name = weapon?.GetItemDefinitionName();
+
+            if(name == null)
+                return;
+
+            _weapons.GetWeaponAmmo(name);
+            _modsharp.PrintToChatAll($"Weapon name: {name}");
+        }
     }
 }

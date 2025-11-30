@@ -14,9 +14,16 @@ public class WeaponData
     public required string EntityName { get; set; }
     public float Knockback { get; set; } = 1.0f;
     public bool Restrict { get; set; } = false;
-    public int MaxPurchase { get; set; } = -1;
+    public int MaxPurchase { get; set; } = 0;
     public List<string> Command { get; set; } = [];
     public int Price { get; set; }
+    public WeaponAmmo? Ammo { get; set; }
+}
+
+public class WeaponAmmo
+{
+    public int Clip { get; set; }
+    public int ReserveAmmo { get; set; }
 }
 
 public class Weapons : IWeapons
@@ -108,16 +115,17 @@ public class Weapons : IWeapons
 
     private void PurchaseWeapon(IGameClient client, string weaponname, WeaponData weapon)
     {
-        var pawn = client.GetPlayerController()?.GetPlayerPawn();
+        var controller = client.GetPlayerController();
+        var pawn = controller?.GetPlayerPawn();
         var player = _playerManager.GetOrCreatePlayer(client);
 
         if(weapon.Restrict)
         {
-            _command.ReplyToCommand(client, $"weapon \x05{weapon.EntityName}\x01 is restricted");
+            _command.ReplyToCommand(client, $"Weapon \x05{weaponname}\x01 is restricted");
             return;
         }
 
-        if(pawn == null)
+        if(pawn == null || controller == null)
         {
             return;
         }
@@ -140,6 +148,35 @@ public class Weapons : IWeapons
             return;
         }
 
+        if(weapon.MaxPurchase == -1)
+        {
+            _command.ReplyToCommand(client, $"Weapon \x05{weaponname}\x01 is restricted for purchasing, and only can be obtained in the map.");
+            return;
+        }
+
+        if(weapon.MaxPurchase > 0)
+        {
+            if(player.PurchaseHistory[weaponname] >= weapon.MaxPurchase)
+            {
+                _command.ReplyToCommand(client, $"Your purchase of weapon \x05{weaponname}\x01 has reached maximum number that allow this round.");
+                return;
+            }
+        }
+
+        var money = controller.GetInGameMoneyService()?.Account;
+
+        if(money < weapon.Price)
+        {
+            _command.ReplyToCommand(client, $"You don't have enough cash for purchasing this weapon! (Price: {weapon.Price}$)");
+            return;
+        }
+
+        controller.GetInGameMoneyService()!.Account -= weapon.Price;
+
+        if (!player.PurchaseHistory.ContainsKey(weaponname))
+            player.PurchaseHistory[weaponname] = 0;
+
+        player.PurchaseHistory[weaponname] += 1;
         pawn.GiveNamedItem(weapon.EntityName);
     }
 
@@ -153,5 +190,10 @@ public class Weapons : IWeapons
 
         // _modsharp.PrintToChatAll($"Found {weaponData.EntityName} and KB: {weaponData.Knockback}");
         return weaponData.Knockback;
+    }
+
+    public WeaponAmmo? GetWeaponAmmo(string weaponentity)
+    {
+        return weaponDatas.Where(p => p.Value.EntityName == weaponentity).FirstOrDefault().Value.Ammo;
     }
 }
