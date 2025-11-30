@@ -17,8 +17,10 @@ public class Hooks : IHooks
     private readonly IEntityManager _entityManager;
     private readonly IInfect _infect;
     private readonly IGrenadeEffect _grenadeEffect;
+    private readonly IWeapons _weapons;
+    private readonly IEconItemManager _econItemManager;
 
-    public Hooks(ISharedSystem sharedSystem, IPlayerManager playerManager, IInfect infect, IGrenadeEffect grenadeEffect)
+    public Hooks(ISharedSystem sharedSystem, IPlayerManager playerManager, IInfect infect, IGrenadeEffect grenadeEffect, IWeapons weapons)
     {
         _sharedSystem = sharedSystem;
         _playerManager = playerManager;
@@ -27,6 +29,8 @@ public class Hooks : IHooks
         _entityManager = _sharedSystem.GetEntityManager();
         _infect = infect;
         _grenadeEffect = grenadeEffect;
+        _weapons = weapons;
+        _econItemManager = _sharedSystem.GetEconItemManager();
     }
 
     public void Init()
@@ -35,6 +39,7 @@ public class Hooks : IHooks
         _hookManager.PlayerGetMaxSpeed.InstallHookPre(OnGetMaxSpeed);
         _hookManager.PlayerDispatchTraceAttack.InstallHookPre(OnTakeDamage);
         _hookManager.GiveNamedItem.InstallHookPost(OnGiveNamedItemPost);
+        _hookManager.PlayerCanAcquire.InstallHookPre(OnCanAcquire);
     }
 
     public void Shutdown()
@@ -43,6 +48,7 @@ public class Hooks : IHooks
         _hookManager.PlayerGetMaxSpeed.RemoveHookPre(OnGetMaxSpeed);
         _hookManager.PlayerDispatchTraceAttack.RemoveHookPre(OnTakeDamage);
         _hookManager.GiveNamedItem.RemoveHookPost(OnGiveNamedItemPost);
+        _hookManager.PlayerCanAcquire.RemoveHookPre(OnCanAcquire);
     }
 
     private HookReturnValue<float> OnGetMaxSpeed(IPlayerGetMaxSpeedHookParams param, HookReturnValue<float> result)
@@ -130,5 +136,28 @@ public class Hooks : IHooks
             }, 1.0f);
         }
         */
+    }
+
+    private HookReturnValue<EAcquireResult> OnCanAcquire(IPlayerCanAcquireHookParams param, HookReturnValue<EAcquireResult> result)
+    {
+        var method = param.Method;
+
+        var index = param.ItemDefinitionIndex;
+        var econItem = _econItemManager.GetEconItemDefinitionByIndex(index);
+        var definationName = econItem?.DefinitionName;
+        var className = econItem?.ItemClassName;
+        var name = econItem?.ItemBaseName;
+
+        _modsharp.PrintToChatAll($"Player {param.Client.Name} has received {name} | {className} | {definationName}");
+
+        if(definationName != null)
+        {
+            var restrict = _weapons.IsWeaponRestricted(definationName);
+
+            if(restrict)
+                return new HookReturnValue<EAcquireResult>(EHookAction.SkipCallReturnOverride, EAcquireResult.NotAllowedByProhibition);
+        }
+
+        return result;
     }
 }

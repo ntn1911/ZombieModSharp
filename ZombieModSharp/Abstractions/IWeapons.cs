@@ -7,4 +7,5 @@ public interface IWeapons
     public void LoadConfig(string path);
     public float GetWeaponKnockback(string weaponentity);
     public WeaponAmmo? GetWeaponAmmo(string weaponentity);
+    public bool IsWeaponRestricted(string weaponentity);
 }

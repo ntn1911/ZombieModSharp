@@ -178,6 +178,7 @@ public class Weapons : IWeapons
 
         player.PurchaseHistory[weaponname] += 1;
         pawn.GiveNamedItem(weapon.EntityName);
+        _command.ReplyToCommand(client, $"You have purchased weapon \x05{weaponname}\x01. {(weapon.MaxPurchase > 0 ? $"Purchases available left: ({weapon.MaxPurchase - player.PurchaseHistory[weaponname]}/{weapon.MaxPurchase})" : "")}");
     }
 
     public float GetWeaponKnockback(string weaponentity)
@@ -195,5 +196,10 @@ public class Weapons : IWeapons
     public WeaponAmmo? GetWeaponAmmo(string weaponentity)
     {
         return weaponDatas.Where(p => p.Value.EntityName == weaponentity).FirstOrDefault().Value.Ammo;
+    }
+
+    public bool IsWeaponRestricted(string weaponentity)
+    {
+        return weaponDatas.Where(p => p.Value.EntityName == weaponentity).FirstOrDefault().Value.Restrict;
     }
 }

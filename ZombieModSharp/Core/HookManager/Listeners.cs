@@ -212,11 +212,28 @@ public class Listeners : IListeners, IClientListener, IGameListener, IEntityList
             var weapon = entity.AsBaseWeapon();
             var name = weapon?.GetItemDefinitionName();
 
-            if(name == null)
+            if(name == null || weapon == null)
                 return;
 
-            _weapons.GetWeaponAmmo(name);
+            var ammo = _weapons.GetWeaponAmmo(name);
             _modsharp.PrintToChatAll($"Weapon name: {name}");
+
+            var vdata = weapon.GetWeaponData();
+
+            if(ammo != null)
+            {
+                if(ammo.ReserveAmmo > 0)
+                {
+                    vdata.PrimaryReserveAmmoMax = ammo.ReserveAmmo;
+                    weapon.ReserveAmmo = ammo.ReserveAmmo;
+                }
+                
+                if(ammo.Clip > 0)
+                {
+                    vdata.MaxClip = ammo.Clip;
+                    weapon.Clip = ammo.Clip;
+                }
+            }
         }
     }
 }
