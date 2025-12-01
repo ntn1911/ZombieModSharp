@@ -216,7 +216,7 @@ public class Listeners : IListeners, IClientListener, IGameListener, IEntityList
                 return;
 
             var ammo = _weapons.GetWeaponAmmo(name);
-            _modsharp.PrintToChatAll($"Weapon name: {name}");
+            // _modsharp.PrintToChatAll($"Weapon name: {name}");
 
             var vdata = weapon.GetWeaponData();
 

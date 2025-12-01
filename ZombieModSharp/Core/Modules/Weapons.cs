@@ -11,6 +11,7 @@ namespace ZombieModSharp.Core.Modules;
 
 public class WeaponData
 {
+    public required string WeaponName { get; set; }
     public required string EntityName { get; set; }
     public float Knockback { get; set; } = 1.0f;
     public bool Restrict { get; set; } = false;
@@ -32,18 +33,16 @@ public class Weapons : IWeapons
     private readonly ILogger<Weapons> _logger;
     private readonly IModSharp _modsharp;
     private readonly ICommandManager _commandManager;
-    private readonly ICommand _command;
     private readonly IPlayerManager _playerManager;
 
     private Dictionary<string, WeaponData> weaponDatas = [];
 
-    public Weapons(ISharedSystem sharedSystem, ILogger<Weapons> logger, ICommandManager commandManager, ICommand command, IPlayerManager playerManager)
+    public Weapons(ISharedSystem sharedSystem, ILogger<Weapons> logger, ICommandManager commandManager, IPlayerManager playerManager)
     {
         _sharedSystem = sharedSystem;
         _logger = _sharedSystem.GetLoggerFactory().CreateLogger<Weapons>();
         _modsharp = _sharedSystem.GetModSharp();
         _commandManager = commandManager;
-        _command = command;
         _playerManager = playerManager;
     }
 
@@ -106,14 +105,14 @@ public class Weapons : IWeapons
 
         if(weaponData.Value == null)
         {
-            _command.ReplyToCommand(client, "Invalid weapon command!");
+            PrintToChat(client, "Invalid weapon command!");
             return;
         }
 
-        PurchaseWeapon(client, weaponData.Key, weaponData.Value);
+        PurchaseWeapon(client, weaponData.Value);
     }
 
-    private void PurchaseWeapon(IGameClient client, string weaponname, WeaponData weapon)
+    public void PurchaseWeapon(IGameClient client, WeaponData weapon)
     {
         var controller = client.GetPlayerController();
         var pawn = controller?.GetPlayerPawn();
@@ -121,7 +120,7 @@ public class Weapons : IWeapons
 
         if(weapon.Restrict)
         {
-            _command.ReplyToCommand(client, $"Weapon \x05{weaponname}\x01 is restricted");
+            PrintToChat(client, $"Weapon \x05{weapon.WeaponName}\x01 is restricted");
             return;
         }
 
@@ -132,33 +131,33 @@ public class Weapons : IWeapons
 
         if(pawn.Team <= CStrikeTeam.Spectator)
         {
-            _command.ReplyToCommand(client, "This feature require player to be in team.");
+            PrintToChat(client, "This feature require player to be in team.");
             return;
         }
 
         if(!pawn.IsAlive)
         {
-            _command.ReplyToCommand(client, "This feature require player to be alive.");
+            PrintToChat(client, "This feature require player to be alive.");
             return;
         }
 
         if(player.IsInfected())
         {
-            _command.ReplyToCommand(client, "This feautre require player to be human.");
+            PrintToChat(client, "This feautre require player to be human.");
             return;
         }
 
         if(weapon.MaxPurchase == -1)
         {
-            _command.ReplyToCommand(client, $"Weapon \x05{weaponname}\x01 is restricted for purchasing, and only can be obtained in the map.");
+            PrintToChat(client, $"Weapon \x05{weapon.WeaponName}\x01 is restricted for purchasing, and only can be obtained in the map.");
             return;
         }
 
         if(weapon.MaxPurchase > 0)
         {
-            if(player.PurchaseHistory[weaponname] >= weapon.MaxPurchase)
+            if(player.PurchaseHistory[weapon.WeaponName] >= weapon.MaxPurchase)
             {
-                _command.ReplyToCommand(client, $"Your purchase of weapon \x05{weaponname}\x01 has reached maximum number that allow this round.");
+                PrintToChat(client, $"Your purchase of weapon \x05{weapon.WeaponName}\x01 has reached maximum number that allow this round.");
                 return;
             }
         }
@@ -167,18 +166,18 @@ public class Weapons : IWeapons
 
         if(money < weapon.Price)
         {
-            _command.ReplyToCommand(client, $"You don't have enough cash for purchasing this weapon! (Price: {weapon.Price}$)");
+            PrintToChat(client, $"You don't have enough cash for purchasing this weapon! (Price: {weapon.Price}$)");
             return;
         }
 
         controller.GetInGameMoneyService()!.Account -= weapon.Price;
 
-        if (!player.PurchaseHistory.ContainsKey(weaponname))
-            player.PurchaseHistory[weaponname] = 0;
+        if (!player.PurchaseHistory.ContainsKey(weapon.WeaponName))
+            player.PurchaseHistory[weapon.WeaponName] = 0;
 
-        player.PurchaseHistory[weaponname] += 1;
+        player.PurchaseHistory[weapon.WeaponName] += 1;
         pawn.GiveNamedItem(weapon.EntityName);
-        _command.ReplyToCommand(client, $"You have purchased weapon \x05{weaponname}\x01. {(weapon.MaxPurchase > 0 ? $"Purchases available left: ({weapon.MaxPurchase - player.PurchaseHistory[weaponname]}/{weapon.MaxPurchase})" : "")}");
+        PrintToChat(client, $"You have purchased weapon \x05{weapon.WeaponName}\x01. {(weapon.MaxPurchase > 0 ? $"Purchases available left: ({weapon.MaxPurchase - player.PurchaseHistory[weapon.WeaponName]}/{weapon.MaxPurchase})" : "")}");
     }
 
     public float GetWeaponKnockback(string weaponentity)
@@ -195,11 +194,22 @@ public class Weapons : IWeapons
 
     public WeaponAmmo? GetWeaponAmmo(string weaponentity)
     {
-        return weaponDatas.Where(p => p.Value.EntityName == weaponentity).FirstOrDefault().Value.Ammo;
+        return weaponDatas.FirstOrDefault(p => p.Value.EntityName == weaponentity).Value?.Ammo;
     }
 
     public bool IsWeaponRestricted(string weaponentity)
     {
-        return weaponDatas.Where(p => p.Value.EntityName == weaponentity).FirstOrDefault().Value.Restrict;
+        return weaponDatas.FirstOrDefault(p => p.Value.EntityName == weaponentity).Value.Restrict;
+    }
+
+    public WeaponData GetWeaponDataWithEntityName(string weaponentity)
+    {
+        var result = weaponDatas.FirstOrDefault(p => p.Value.EntityName == weaponentity).Value;
+        return result;
+    }
+
+    private void PrintToChat(IGameClient client, string text)
+    {
+        _modsharp.PrintChannelFilter(HudPrintChannel.Chat, $"{ZombieModSharp.Prefix} text", new RecipientFilter(client));
     }
 }

@@ -148,14 +148,23 @@ public class Hooks : IHooks
         var className = econItem?.ItemClassName;
         var name = econItem?.ItemBaseName;
 
-        _modsharp.PrintToChatAll($"Player {param.Client.Name} has received {name} | {className} | {definationName}");
+        // _modsharp.PrintToChatAll($"Player {param.Client.Name} has received {name} | {className} | {definationName}");
 
         if(definationName != null)
         {
-            var restrict = _weapons.IsWeaponRestricted(definationName);
+            if(param.Method == EAcquireMethod.PickUp)
+            {
+                var restrict = _weapons.IsWeaponRestricted(definationName);
 
-            if(restrict)
+                if(restrict)
+                    return new HookReturnValue<EAcquireResult>(EHookAction.SkipCallReturnOverride, EAcquireResult.NotAllowedByProhibition);
+            }
+            else
+            {
+                var weaponTarget = _weapons.GetWeaponDataWithEntityName(definationName);
+                _weapons.PurchaseWeapon(param.Client, weaponTarget);
                 return new HookReturnValue<EAcquireResult>(EHookAction.SkipCallReturnOverride, EAcquireResult.NotAllowedByProhibition);
+            }
         }
 
         return result;
