@@ -73,4 +73,10 @@ public class Player
 
     // weapon purchase count
     public Dictionary<string, int> PurchaseHistory { get; set; } = [];
+
+    // Top defender and Top infection.
+    public int TotalDamage { get; set; }
+    public int TotalInfect { get; set; }
+    public bool AllowExtraGrenade { get; set; } = false;
+    public bool MotherZombieImmune { get; set; } = false;
 }

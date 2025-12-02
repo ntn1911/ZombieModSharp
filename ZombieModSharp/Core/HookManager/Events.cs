@@ -137,6 +137,8 @@ public class Events : IEvents, IEventListener
             var hitGroup = e.GetInt("hitgroup");
             var pawn = client.GetPlayerController()?.GetPlayerPawn();
 
+            zmAttacker.TotalDamage += damage;
+
             if(pawn != null)
             {
                 if(Infect.CashMultiply > 0)

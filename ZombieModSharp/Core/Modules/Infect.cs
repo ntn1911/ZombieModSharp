@@ -114,6 +114,9 @@ public class Infect : IInfect
         if (attacker == null)
             return;
 
+        var attackerPlayer = _player.GetOrCreatePlayer(attacker);
+        attackerPlayer.TotalInfect += 1;
+
         _soundServices.ZombieMoan(pawn);
         CheckGameStatus();
 
@@ -189,6 +192,8 @@ public class Infect : IInfect
             var zmPlayer = kvp.Value;
 
             zmPlayer.IsZombie = false;
+            zmPlayer.TotalDamage = 0;
+            zmPlayer.TotalInfect = 0;
 
             var controller = client.GetPlayerController();
             if (controller == null)
@@ -230,6 +235,42 @@ public class Infect : IInfect
 
             if (zmPlayer.MotherZombieStatus == MotherZombieStatus.Chosen)
                 zmPlayer.MotherZombieStatus = MotherZombieStatus.Last;
+        }
+
+        // Top defender, which we take from 3 client where they're actually do something with it.
+        var topDefender = allPlayers.OrderByDescending(p => p.Value.TotalDamage).Take(3).Where(p => p.Value.TotalDamage > 0).ToList();
+        var topInfect = allPlayers.OrderByDescending(p => p.Value.TotalInfect).Take(3).Where(p => p.Value.TotalInfect > 0).ToList();
+
+        // Print to all player.
+        _modSharp.PrintToChatAll($"\x0C+++++++++++++++++ \x04[TOP DEFENDER] \x0C+++++++++++++++++");
+        for(int i = 0; i < topDefender.Count; i++)
+        {
+            _modSharp.PrintToChatAll($"\x06{i+1}. {topDefender[i].Key.Name} - \x07{topDefender[i].Value.TotalDamage} DMG");
+
+            // we give them reward based on next round.
+            if(i < 2)
+            {
+                // extra grenade.
+                allPlayers[topDefender[i].Key].AllowExtraGrenade = true;
+            }
+
+            allPlayers[topDefender[i].Key].MotherZombieImmune = true;
+        }
+
+        // infector side
+        _modSharp.PrintToChatAll($"\x10+++++++++++++++++ \x07[TOP INFECTOR] \x10+++++++++++++++++");
+        for(int i = 0; i < topDefender.Count; i++)
+        {
+            _modSharp.PrintToChatAll($"\x09{i+1}. {topDefender[i].Key.Name} - \x07{topDefender[i].Value.TotalDamage} DMG");
+
+            // we give them reward based on next round.
+            if(i < 2)
+            {
+                // extra grenade.
+                allPlayers[topDefender[i].Key].AllowExtraGrenade = true;
+            }
+
+            allPlayers[topDefender[i].Key].MotherZombieImmune = true;
         }
     }
 
@@ -328,7 +369,7 @@ public class Infect : IInfect
     {
         // Get All Player with motherzombie status, and alive.
         var candidate = _player.GetAllPlayers().Where(p => p.Value.MotherZombieStatus == MotherZombieStatus.None
-            && (p.Key.GetPlayerController()?.IsAlive ?? false));
+            && (p.Key.GetPlayerController()?.GetPlayerPawn()?.IsAlive ?? false) && p.Value.MotherZombieImmune == false);
 
         // we could just use all player and count them but this sometime unfair for player who has to fight for spectator
         var totalPlayer = _player.GetAllPlayers().Where(p => p.Key.GetPlayerController()?.IsAlive ?? false).Count();
@@ -369,7 +410,7 @@ public class Infect : IInfect
 
             // getting candidate again.
             candidate = _player.GetAllPlayers().Where(p => p.Value.MotherZombieStatus == MotherZombieStatus.None
-                && (p.Key.GetPlayerController()?.IsAlive ?? false));
+                && (p.Key.GetPlayerController()?.IsAlive ?? false) && p.Value.MotherZombieImmune == false);
 
             // tell them that we have reset cycle.
             _modSharp.PrintChannelAll(HudPrintChannel.Chat, $"{ZombieModSharp.Prefix} Mother Zombie has been reset.");
@@ -389,6 +430,12 @@ public class Infect : IInfect
         {
             InfectPlayer(player.Key, null, true, false);
             player.Value.MotherZombieStatus = MotherZombieStatus.Chosen;
+        }
+
+        foreach (var player in _player.GetAllPlayers())
+        {
+            player.Value.MotherZombieImmune = false;
+            player.Value.AllowExtraGrenade = false;
         }
     }
 
