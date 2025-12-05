@@ -199,7 +199,8 @@ public class Weapons : IWeapons
 
     public bool IsWeaponRestricted(string weaponentity)
     {
-        return weaponDatas.FirstOrDefault(p => p.Value.EntityName == weaponentity).Value.Restrict;
+        var data = weaponDatas.FirstOrDefault(p => p.Value.EntityName == weaponentity).Value;
+        return data != null ? data.Restrict : false;
     }
 
     public WeaponData GetWeaponDataWithEntityName(string weaponentity)
@@ -210,6 +211,6 @@ public class Weapons : IWeapons
 
     private void PrintToChat(IGameClient client, string text)
     {
-        _modsharp.PrintChannelFilter(HudPrintChannel.Chat, $"{ZombieModSharp.Prefix} text", new RecipientFilter(client));
+        _modsharp.PrintChannelFilter(HudPrintChannel.Chat, $"{ZombieModSharp.Prefix} {text}", new RecipientFilter(client));
     }
 }

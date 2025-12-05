@@ -159,11 +159,15 @@ public class Hooks : IHooks
                 if(restrict)
                     return new HookReturnValue<EAcquireResult>(EHookAction.SkipCallReturnOverride, EAcquireResult.NotAllowedByProhibition);
             }
-            else
+            else if(param.Method == EAcquireMethod.Buy)
             {
                 var weaponTarget = _weapons.GetWeaponDataWithEntityName(definationName);
-                _weapons.PurchaseWeapon(param.Client, weaponTarget);
-                return new HookReturnValue<EAcquireResult>(EHookAction.SkipCallReturnOverride, EAcquireResult.NotAllowedByProhibition);
+
+                if(weaponTarget != null)
+                {
+                    _weapons.PurchaseWeapon(param.Client, weaponTarget);
+                    return new HookReturnValue<EAcquireResult>(EHookAction.SkipCallReturnOverride, EAcquireResult.NotAllowedByProhibition);
+                }
             }
         }
 

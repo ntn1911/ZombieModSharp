@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Sharp.Extensions.CommandManager;
+using Sharp.Extensions.GameEventManager;
 using Sharp.Shared;
 using Sharp.Shared.Abstractions;
 using ZombieModSharp.Abstractions;
@@ -64,6 +65,7 @@ public sealed class ZombieModSharp : IModSharpModule
             new SqliteDatabase($"Data Source={path}", provider.GetRequiredService<ILogger<SqliteDatabase>>()));
         
         services.AddCommandManager(sharedSystem);
+        services.AddGameEventManager(sharedSystem);
 
         // Register our services using the extension method
         services.AddZombieModSharpServices();
@@ -112,7 +114,6 @@ public sealed class ZombieModSharp : IModSharpModule
 
         // _logger.LogInformation("See you around, Nameless~ Try to stay out of trouble, especially... the next time we meet!");
         _listeners.Shutdown();
-        _eventListener.Shutdown();
         _hooks.Shutdown();
         _sqliteDatabase.Shutdown();
         _cvarServices.Shutdown();

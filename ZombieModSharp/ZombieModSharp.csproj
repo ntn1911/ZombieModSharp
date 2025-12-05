@@ -14,6 +14,7 @@
     <PackageReference Include="Dapper" Version="2.1.66" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.0" />
     <PackageReference Include="ModSharp.Sharp.Extensions.CommandManager" Version="2.1.88" />
+    <PackageReference Include="ModSharp.Sharp.Extensions.GameEventManager" Version="2.1.88" />
     <PackageReference Include="ModSharp.Sharp.Generator.Sdk" Version="2.1.88">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>

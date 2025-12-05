@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Sharp.Extensions.GameEventManager;
 using Sharp.Shared;
 using Sharp.Shared.Enums;
 using Sharp.Shared.GameEvents;
@@ -11,10 +12,11 @@ using ZombieModSharp.Core.Modules;
 
 namespace ZombieModSharp.Core.HookManager;
 
-public class Events : IEvents, IEventListener
+public class Events : IEvents
 {
     private readonly ISharedSystem _sharedSystem;
-    private readonly IEventManager _eventManager;
+    // private readonly IEventManager _eventManager;
+    private readonly IGameEventManager _gameEventManager;
     private readonly ILogger<Events> _logger;
     private readonly IPlayerManager _playerManager;
     private readonly IInfect _infect;
@@ -30,10 +32,10 @@ public class Events : IEvents, IEventListener
 
     public bool RoundEnded { get; private set; } = false;
 
-    public Events(ISharedSystem sharedSystem, ILogger<Events> logger, IPlayerManager playerManager, IInfect infect, IZTele ztele, IKnockback knockback, ICvarServices cvarServices, ISoundServices soundServices, IRespawnServices respawnServices)
+    public Events(ISharedSystem sharedSystem, IGameEventManager gameEventManager, ILogger<Events> logger, IPlayerManager playerManager, IInfect infect, IZTele ztele, IKnockback knockback, ICvarServices cvarServices, ISoundServices soundServices, IRespawnServices respawnServices)
     {
         _sharedSystem = sharedSystem;
-        _eventManager = _sharedSystem.GetEventManager();
+        _gameEventManager = gameEventManager;
         _logger = logger;
         _playerManager = playerManager;
         _modSharp = _sharedSystem.GetModSharp();
@@ -47,60 +49,20 @@ public class Events : IEvents, IEventListener
 
     public void Init()
     {
-        _eventManager.InstallEventListener(this);
         RegisterEvents();
-    }
-
-    public void Shutdown()
-    {
-        _eventManager.RemoveEventListener(this);
     }
 
     public void RegisterEvents()
     {
-        _eventManager.HookEvent("player_hurt");
-        _eventManager.HookEvent("player_death");
-        _eventManager.HookEvent("player_spawn");
-        _eventManager.HookEvent("round_end");
-        _eventManager.HookEvent("cs_pre_restart");
-        _eventManager.HookEvent("round_start");
-        _eventManager.HookEvent("round_freeze_end");
-        _eventManager.HookEvent("warmup_end");
-    }
-
-    public void FireGameEvent(IGameEvent e)
-    {
-        var eventName = e.Name?.ToLowerInvariant();
-
-        switch (eventName)
-        {
-            case "player_hurt":
-                OnPlayerHurt(e);
-                break;
-            case "player_death":
-                OnPlayerDeath(e);
-                break;
-            case "round_end":
-                OnRoundEnd(e);
-                break;
-            case "round_start":
-                OnRoundStart(e);
-                break;
-            case "player_spawn":
-                OnPlayerSpawn(e);
-                break;
-            case "cs_pre_restart":
-                OnPreRestart(e);
-                break;
-            case "round_freeze_end":
-                OnRoundFreezeEnd(e);
-                break;
-            case "warmup_end":
-                OnWarmupEnd(e);
-                break;
-            default:
-                break;
-        }
+        _gameEventManager.ListenEvent("player_hurt", OnPlayerHurt);
+        _gameEventManager.ListenEvent("player_death", OnPlayerDeath);
+        _gameEventManager.ListenEvent("player_spawn", OnPlayerSpawn);
+        _gameEventManager.ListenEvent("round_end", OnRoundEnd);
+        _gameEventManager.ListenEvent("cs_pre_restart", OnPreRestart);
+        _gameEventManager.ListenEvent("round_start", OnRoundStart);
+        _gameEventManager.ListenEvent("round_freeze_end", OnRoundFreezeEnd);
+        _gameEventManager.ListenEvent("warmup_end", OnWarmupEnd);
+        _gameEventManager.ListenEvent("weapon_fire", OnWeaponFired);
     }
 
     private void OnPlayerHurt(IGameEvent e)
@@ -207,7 +169,7 @@ public class Events : IEvents, IEventListener
     private void OnRoundEnd(IGameEvent e)
     {
         RoundEnded = true;
-        //_modSharp.PrintChannelAll(HudPrintChannel.Chat, $"The round just ended");
+        // _modSharp.PrintChannelAll(HudPrintChannel.Chat, $"The round just ended");
         _infect.OnRoundEnd();
     }
 
@@ -285,5 +247,19 @@ public class Events : IEvents, IEventListener
                 pawn?.GetPlayerPawn()?.SetCollisionGroup(CollisionGroupType.Debris);
             }
         }, 0.05, GameTimerFlags.None | GameTimerFlags.StopOnMapEnd | GameTimerFlags.StopOnRoundEnd);
+    }
+
+    private void OnWeaponFired(IGameEvent fired)
+    {
+        var pawn = fired.GetPlayerPawn("userid");
+
+        var weapon = pawn?.GetWeaponService()?.ActiveWeapon;
+        // _modSharp.PrintToChatAll("Fired");
+
+        if(weapon != null && (weapon.Slot == GearSlot.Rifle || weapon.Slot == GearSlot.Pistol))
+        {
+            //_modSharp.PrintToChatAll("Change");
+            weapon.ReserveAmmo += 1;
+        }
     }
 }
