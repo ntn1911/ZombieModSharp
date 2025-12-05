@@ -242,35 +242,32 @@ public class Infect : IInfect
         var topInfect = allPlayers.OrderByDescending(p => p.Value.TotalInfect).Take(3).Where(p => p.Value.TotalInfect > 0).ToList();
 
         // Print to all player.
-        _modSharp.PrintToChatAll($"\x0C+++++++++++++++++ \x04[TOP DEFENDER] \x0C+++++++++++++++++");
-        for(int i = 0; i < topDefender.Count; i++)
+        if(topDefender.Count > 0)
         {
-            _modSharp.PrintToChatAll($"\x06{i+1}. {topDefender[i].Key.Name} - \x07{topDefender[i].Value.TotalDamage} DMG");
-
-            // we give them reward based on next round.
-            if(i < 2)
+            _modSharp.PrintToChatAll($" \x0C+++++++++++++++++ \x04[TOP DEFENDER] \x0C+++++++++++++++++");
+            for(int i = 0; i < topDefender.Count; i++)
             {
-                // extra grenade.
-                allPlayers[topDefender[i].Key].AllowExtraGrenade = true;
-            }
+                _modSharp.PrintToChatAll($" \x06{i+1}. {topDefender[i].Key.Name} - \x07{topDefender[i].Value.TotalDamage} DMG");
 
-            allPlayers[topDefender[i].Key].MotherZombieImmune = true;
+                // we give them reward based on next round.
+                if(i < 2)
+                {
+                    // extra grenade.
+                    allPlayers[topDefender[i].Key].AllowExtraGrenade = true;
+                }
+
+                allPlayers[topDefender[i].Key].MotherZombieImmune = true;
+            }
         }
 
-        // infector side
-        _modSharp.PrintToChatAll($"\x10+++++++++++++++++ \x07[TOP INFECTOR] \x10+++++++++++++++++");
-        for(int i = 0; i < topDefender.Count; i++)
+        if(topInfect.Count > 0)
         {
-            _modSharp.PrintToChatAll($"\x09{i+1}. {topDefender[i].Key.Name} - \x07{topDefender[i].Value.TotalDamage} DMG");
-
-            // we give them reward based on next round.
-            if(i < 2)
+            // infector side
+            _modSharp.PrintToChatAll($" \x10+++++++++++++++++ \x07[TOP INFECTOR] \x10+++++++++++++++++");
+            for(int i = 0; i < topInfect.Count; i++)
             {
-                // extra grenade.
-                allPlayers[topDefender[i].Key].AllowExtraGrenade = true;
+                _modSharp.PrintToChatAll($" \x09{i+1}. {topInfect[i].Key.Name} - \x07{topInfect[i].Value.TotalInfect} Infected");
             }
-
-            allPlayers[topDefender[i].Key].MotherZombieImmune = true;
         }
     }
 
