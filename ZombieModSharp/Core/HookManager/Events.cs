@@ -265,7 +265,14 @@ public class Events : IEvents, IEventListener
             }
             // regardless of wtf happenned here, before infection start all player should be spawn as human.
             else
+            {
                 _infect.HumanizeClient(client);
+
+                if(player.AllowExtraGrenade)
+                {
+                    pawn?.GetPlayerPawn()?.GiveNamedItem(EconItemId.Hegrenade);
+                }
+            }
 
             _ztele.OnPlayerSpawn(client);
             // this is for noblock

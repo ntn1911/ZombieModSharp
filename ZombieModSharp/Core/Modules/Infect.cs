@@ -432,9 +432,14 @@ public class Infect : IInfect
             player.Value.MotherZombieStatus = MotherZombieStatus.Chosen;
         }
 
-        foreach (var player in _player.GetAllPlayers())
+        foreach (var player in _player.GetAllPlayers().Where(p => p.Value.MotherZombieImmune || p.Value.AllowExtraGrenade))
         {
-            player.Value.MotherZombieImmune = false;
+            if(player.Value.MotherZombieImmune)
+            {
+                _modSharp.PrintChannelFilter(HudPrintChannel.Chat, $"{ZombieModSharp.Prefix} You have mother zombie immunity from top defender!", new RecipientFilter(player.Key));
+                player.Value.MotherZombieImmune = false;
+            }
+
             player.Value.AllowExtraGrenade = false;
         }
     }
