@@ -33,8 +33,9 @@ public class Listeners : IListeners, IClientListener, IGameListener, IEntityList
     private readonly IRespawnServices _respawnServices;
     private readonly IEntityManager _entityManager;
     private readonly IWeapons _weapons;
+    private readonly IGrenadeEffect _grenadeEffect;
 
-    public Listeners(IPlayerManager playerManager, ISharedSystem sharedSystem, ISqliteDatabase sqlite, ICvarServices cvarServices, IPlayerClasses playerClasses, IPrecacheManager precacheManager, IRespawnServices respawnServices, IWeapons weapons)
+    public Listeners(IPlayerManager playerManager, ISharedSystem sharedSystem, ISqliteDatabase sqlite, ICvarServices cvarServices, IPlayerClasses playerClasses, IPrecacheManager precacheManager, IRespawnServices respawnServices, IWeapons weapons, IGrenadeEffect grenadeEffect)
     {
         _playerManager = playerManager;
         _sharedSystem = sharedSystem;
@@ -47,6 +48,7 @@ public class Listeners : IListeners, IClientListener, IGameListener, IEntityList
         _respawnServices = respawnServices;
         _entityManager = _sharedSystem.GetEntityManager();
         _weapons = weapons;
+        _grenadeEffect = grenadeEffect;
     }
 
     public void Init()
@@ -234,6 +236,22 @@ public class Listeners : IListeners, IClientListener, IGameListener, IEntityList
                     weapon.Clip = ammo.Clip;
                 }
             }
+        }
+
+        if(entity.Classname.Contains("smokegrenade_projectile") || entity.Classname.Contains("decoy_projectile"))
+        {
+            _modsharp.PushTimer(() =>
+            {
+                _grenadeEffect.ApplyFreeze(entity, 600, 3f);
+            }, 1.3f, GameTimerFlags.StopOnMapEnd);
+        }
+
+        if(entity.Classname.Contains("flashbang_projectile"))
+        {
+            _modsharp.PushTimer(() =>
+            {
+                _grenadeEffect.ApplyLightGrenade(entity, 15f);
+            }, 1.3f, GameTimerFlags.StopOnMapEnd);
         }
     }
 }

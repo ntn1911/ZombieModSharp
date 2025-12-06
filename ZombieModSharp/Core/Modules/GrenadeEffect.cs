@@ -109,4 +109,70 @@ public class GrenadeEffect : IGrenadeEffect
             TakeDamageFlags = TakeDamageFlags.IgnoreArmor
         }, true);
     }
+
+    public void ApplyFreeze(IBaseEntity grenade, float distanceLimit, float duration)
+    {
+        if(grenade == null || !grenade.IsValid())
+            return;
+            
+        var grenadePos = grenade.GetAbsOrigin();
+
+        foreach(var client in _playerManager.GetAllPlayers().Where(p => p.Value.IsInfected()))
+        {
+            var pawn = client.Key.GetPlayerController()?.GetPlayerPawn();
+
+            if(pawn == null || !pawn.IsAlive)
+                continue;
+
+            var pos = pawn.GetAbsOrigin();
+
+            var distance = GetDistance(grenadePos, pos);
+
+            if(distance <= distanceLimit)
+            {
+                pawn.SetMoveType(MoveType.None);
+
+                _modsharp.PushTimer(() =>
+                {
+                    pawn.SetMoveType(MoveType.Walk);
+                }, duration, GameTimerFlags.StopOnMapEnd);
+            }
+        }
+
+        // we can't get flashed.
+        grenade.Kill();
+    }
+
+    public void ApplyLightGrenade(IBaseEntity grenade, float duration)
+    {
+        if(grenade == null || !grenade.IsValid())
+            return;
+
+        var pos = grenade.GetAbsOrigin().ToString();
+        var kv = new Dictionary<string, KeyValuesVariantValueItem>
+        {
+            { "inner_cone", 1 },
+            { "cone", 80 },
+            { "brightness", 1 },
+            { "spotlight_radius", 150.0f },
+            { "pitch", 90 },
+            { "style", 1 },
+            { "_light", "255 255 255 255" },
+            { "distance", 1000.0f },
+            { "origin", pos }
+        };
+
+        var entity = _entityManager.SpawnEntitySync("light_dynamic", kv);
+        entity?.AddIOEvent(duration, "Kill");
+
+        grenade.Kill();
+    }
+
+    private float GetDistance(Vector a, Vector b)
+    {
+        var dx = a.X - b.X;
+        var dy = a.Y - b.Y;
+        var dz = a.Z - b.Z;
+        return (float)Math.Sqrt(dx * dx + dy * dy + dz * dz);
+    }
 }
