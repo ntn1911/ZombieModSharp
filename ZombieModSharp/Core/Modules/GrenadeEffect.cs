@@ -148,7 +148,7 @@ public class GrenadeEffect : IGrenadeEffect
         if(grenade == null || !grenade.IsValid())
             return;
 
-        var pos = grenade.GetAbsOrigin().ToString();
+        var pos = grenade.GetAbsOrigin();
         var kv = new Dictionary<string, KeyValuesVariantValueItem>
         {
             { "inner_cone", 1 },
@@ -158,11 +158,11 @@ public class GrenadeEffect : IGrenadeEffect
             { "pitch", 90 },
             { "style", 1 },
             { "_light", "255 255 255 255" },
-            { "distance", 1000.0f },
-            { "origin", pos }
+            { "distance", 1000.0f }
         };
 
         var entity = _entityManager.SpawnEntitySync("light_dynamic", kv);
+        entity?.Teleport(pos);
         entity?.AddIOEvent(duration, "Kill");
 
         grenade.Kill();
