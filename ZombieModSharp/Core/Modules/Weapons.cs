@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Sharp.Extensions.CommandManager;
 using Sharp.Shared;
 using Sharp.Shared.Enums;
+using Sharp.Shared.Managers;
 using Sharp.Shared.Objects;
 using Sharp.Shared.Types;
 using ZombieModSharp.Abstractions;
@@ -13,6 +14,7 @@ public class WeaponData
 {
     public required string WeaponName { get; set; }
     public required string EntityName { get; set; }
+    public int WeaponSlot { get; set; }
     public float Knockback { get; set; } = 1.0f;
     public bool Restrict { get; set; } = false;
     public int MaxPurchase { get; set; } = 0;
@@ -34,6 +36,7 @@ public class Weapons : IWeapons
     private readonly IModSharp _modsharp;
     private readonly ICommandManager _commandManager;
     private readonly IPlayerManager _playerManager;
+    private readonly IEntityManager _entityManager;
 
     private Dictionary<string, WeaponData> weaponDatas = [];
 
@@ -44,6 +47,7 @@ public class Weapons : IWeapons
         _modsharp = _sharedSystem.GetModSharp();
         _commandManager = commandManager;
         _playerManager = playerManager;
+        _entityManager = _sharedSystem.GetEntityManager();
     }
 
     public void LoadConfig(string path)
@@ -168,6 +172,39 @@ public class Weapons : IWeapons
         {
             PrintToChat(client, $"You don't have enough cash for purchasing this weapon! (Price: {weapon.Price}$)");
             return;
+        }
+
+        // force drop weapon mostly.
+        if(weapon.WeaponSlot <= (int)GearSlot.Pistol)
+        {
+            var ent = pawn.GetWeaponBySlot((GearSlot)weapon.WeaponSlot);
+
+            if(ent != null)
+            {
+                pawn.DropWeapon(ent);
+                _modsharp.PushTimer(() =>
+                {
+                    if(ent != null && ent.IsValid())
+                        ent.AcceptInput("Kill");
+                }, 0.02f);
+            }
+        }
+
+        else if(weapon.WeaponSlot == (int)GearSlot.Grenades)
+        {
+            var services = pawn.GetWeaponService()?.GetMyWeapons();
+
+            if(services != null)
+            {
+                foreach (var ent in services)
+                {
+                    if(_entityManager.FindEntityByHandle(ent)?.Classname == weapon.EntityName)
+                    {
+                        PrintToChat(client, "You already carried that type of grenade!");
+                        return;
+                    }
+                }
+            }
         }
 
         controller.GetInGameMoneyService()!.Account -= weapon.Price;
