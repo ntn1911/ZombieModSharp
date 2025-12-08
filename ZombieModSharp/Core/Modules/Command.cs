@@ -147,7 +147,7 @@ public class Command : ICommand
         if(command.ArgCount < 1)
         {
             player.SoundEnabled = !player.SoundEnabled;
-            _modsharp.PrintToChatAll("This shit is not even one");
+            // _modsharp.PrintToChatAll("This shit is not even one");
         }
 
         else

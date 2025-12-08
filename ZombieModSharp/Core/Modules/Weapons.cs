@@ -98,22 +98,23 @@ public class Weapons : IWeapons
             foreach(var command in weapon.Value.Command)
             {
                 _commandManager.RegisterClientCommand(command, OnPurchaseWeaponCommand);
+                _logger.LogInformation("Assigned Command {command}", command);
             }
         }
     }
 
     private void OnPurchaseWeaponCommand(IGameClient client, StringCommand command)
     {
-        var arg = command.GetArg(0);
-        var weaponData = weaponDatas.FirstOrDefault(w => w.Value.Command.Contains(arg));
+        var arg = command.CommandName;
+        var weaponData = weaponDatas.FirstOrDefault(w => w.Value.Command.Contains(arg)).Value;
 
-        if(weaponData.Value == null)
+        if(weaponData == null)
         {
             PrintToChat(client, "Invalid weapon command!");
             return;
         }
 
-        PurchaseWeapon(client, weaponData.Value);
+        PurchaseWeapon(client, weaponData);
     }
 
     public void PurchaseWeapon(IGameClient client, WeaponData weapon)
