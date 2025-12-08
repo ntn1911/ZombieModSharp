@@ -1,143 +1,334 @@
 {
     // single 
     "glock": {
+        "WeaponName": "Glock",
         "EntityName": "weapon_glock",
-        "Knockback": 1.3
+        "Knockback": 1.3,
+        "Restrict": false,
+        "MaxPurchase": 0,
+        "Command": ["glock"],
+        "Price": 200
     },
     "hkp2000": {
+        "WeaponName": "HKP2000",
         "EntityName": "weapon_hkp2000",
-        "Knockback": 1.3
+        "Knockback": 1.3,
+        "Restrict": false,
+        "MaxPurchase": 0,
+        "Command": ["p2000"],
+        "Price": 300
+    },
+    "usp_silencer": {
+        "WeaponName": "USP-S",
+        "EntityName": "weapon_usp_silencer",
+        "Knockback": 1.3,
+        "Restrict": false,
+        "MaxPurchase": 0,
+        "Command": ["usp"],
+        "Price": 300,
+        "Ammo": {
+            "Clip": 120,
+            "ReserveAmmo": 1000
+        }
     },
     "elite": {
+        "WeaponName": "Dual Elite",
         "EntityName": "weapon_elite",
-        "Knockback": 1.1
+        "Knockback": 1.1,
+        "Restrict": true,
+        "MaxPurchase": 0,
+        "Command": ["elite"],
+        "Price": 750
     },
     "p250": {
+        "WeaponName": "P250",
         "EntityName": "weapon_p250",
-        "Knockback": 1.2
+        "Knockback": 1.2,
+        "Restrict": false,
+        "MaxPurchase": 0,
+        "Command": ["p250"],
+        "Price": 650
     },
     "tec9": {
+        "WeaponName": "Tec-9",
         "EntityName": "weapon_tec9",
-        "Knockback": 1.1
+        "Knockback": 1.1,
+        "Restrict": false,
+        "MaxPurchase": 0,
+        "Command": ["tec9"],
+        "Price": 1000
     },
     "cz75a": {
+        "WeaponName": "CZ75",
         "EntityName": "weapon_cz75a",
-        "Knockback": 1.2
+        "Knockback": 1.2,
+        "Restrict": false,
+        "MaxPurchase": 0,
+        "Command": ["cz", "cz75"],
+        "Price": 900
     },
     "fiveseven": {
+        "WeaponName": "FiveSeven",
         "EntityName": "weapon_fiveseven",
-        "Knockback": 1.0
+        "Knockback": 1.0,
+        "Restrict": false,
+        "MaxPurchase": 0,
+        "Command": ["fiveseven", "57"],
+        "Price": 900
     },
     "deagle": {
+        "WeaponName": "Deagle",
         "EntityName": "weapon_deagle",
-        "Knockback": 1.0
+        "Knockback": 1.0,
+        "Restrict": false,
+        "MaxPurchase": 0,
+        "Command": ["deagle"],
+        "Price": 700
     },
     "revolver": {
+        "WeaponName": "R8 Revolver",
         "EntityName": "weapon_revolver",
-        "Knockback": 1.0
+        "Knockback": 1.0,
+        "Restrict": false,
+        "MaxPurchase": 0,
+        "Command": ["revolver", "r8"],
+        "Price": 800
     },
 
     // SMG
     "mp9": {
+        "WeaponName": "MP9",
         "EntityName": "weapon_mp9",
-        "Knockback": 1.1
+        "Knockback": 1.1,
+        "Restrict": false,
+        "MaxPurchase": 0,
+        "Command": ["mp9"],
+        "Price": 1200
     },
     "mac10": {
+        "WeaponName": "Mac10",
         "EntityName": "weapon_mac10",
-        "Knockback": 1.1
+        "Knockback": 1.1,
+        "Restrict": false,
+        "MaxPurchase": 0,
+        "Command": ["mac10", "mac"],
+        "Price": 1000
     },
     "mp7": {
+        "WeaponName": "MP7",
         "EntityName": "weapon_mp7",
-        "Knockback": 1.3
+        "Knockback": 1.3,
+        "Restrict": false,
+        "MaxPurchase": 0,
+        "Command": ["mp7"],
+        "Price": 1400
+    },
+    "mp5sd": {
+        "WeaponName": "MP5-SD",
+        "EntityName": "weapon_mp5sd",
+        "Knockback": 1.3,
+        "Restrict": false,
+        "MaxPurchase": 0,
+        "Command": ["mp5", "mp5sd"],
+        "Price": 1250
     },
     "ump45": {
+        "WeaponName": "UMP45",
         "EntityName": "weapon_ump45",
-        "Knockback": 1.3
+        "Knockback": 1.3,
+        "Restrict": false,
+        "MaxPurchase": 0,
+        "Command": ["ump"],
+        "Price": 1300
     },
     "p90": {
+        "WeaponName": "P90",
         "EntityName": "weapon_p90",
-        "Knockback": 1.2
+        "Knockback": 1.2,
+        "Restrict": false,
+        "MaxPurchase": 0,
+        "Command": ["p90"],
+        "Price": 2350
     },
     "bizon": {
+        "WeaponName": "PP-Bizon",
         "EntityName": "weapon_bizon",
-        "Knockback": 1.2
+        "Knockback": 1.2,
+        "Restrict": false,
+        "MaxPurchase": 0,
+        "Command": ["pp", "bizon"],
+        "Price": 1600
     },
 
     // Shotgun
     "nova": {
+        "WeaponName": "Nova",
         "EntityName": "weapon_nova",
-        "Knockback": 0.5
+        "Knockback": 0.5,
+        "Restrict": false,
+        "MaxPurchase": 0,
+        "Command": ["nova"],
+        "Price": 1700
     },
     "xm1014": {
+        "WeaponName": "XM1014",
         "EntityName": "weapon_xm1014",
-        "Knockback": 0.5
+        "Knockback": 0.5,
+        "Restrict": false,
+        "MaxPurchase": 0,
+        "Command": ["xm1014", "xm", "xm10"],
+        "Price": 2000
     },
     "sawedoff": {
+        "WeaponName": "Sawed-Off",
         "EntityName": "weapon_sawedoff",
-        "Knockback": 0.5
+        "Knockback": 0.5,
+        "Restrict": false,
+        "MaxPurchase": 0,
+        "Command": ["sawedoff"],
+        "Price": 1500
     },
     "mag7": {
+        "WeaponName": "Mag-7",
         "EntityName": "weapon_mag7",
-        "Knockback": 0.5
+        "Knockback": 0.5,
+        "Restrict": false,
+        "MaxPurchase": 0,
+        "Command": ["mag7"],
+        "Price": 2000
     },
 
     // Rifle
     "galil": {
+        "WeaponName": "Galil",
         "EntityName": "weapon_galil",
-        "Knockback": 1.1
+        "Knockback": 1.1,
+        "Restrict": false,
+        "MaxPurchase": 0,
+        "Command": ["galil"],
+        "Price": 1750
     },
     "famas": {
+        "WeaponName": "Famas",
         "EntityName": "weapon_famas",
-        "Knockback": 1.1
+        "Knockback": 1.1,
+        "Restrict": false,
+        "MaxPurchase": 0,
+        "Command": ["famas"],
+        "Price": 2350
     },
     "ak47": {
+        "WeaponName": "AK47",
         "EntityName": "weapon_ak47",
-        "Knockback": 1.1
+        "Knockback": 1.1,
+        "Restrict": false,
+        "MaxPurchase": 0,
+        "Command": ["ak", "ak47"],
+        "Price": 2700
     },
     "m4a1": {
+        "WeaponName": "M4A4",
         "EntityName": "weapon_m4a1",
-        "Knockback": 1.1
+        "Knockback": 1.1,
+        "Restrict": false,
+        "MaxPurchase": 0,
+        "Command": ["m4a4", "m4"],
+        "Price": 3100
+    },
+    "m4a1_silencer": {
+        "WeaponName": "M4A1-S",
+        "EntityName": "weapon_m4a1_silencer",
+        "Knockback": 1.1,
+        "Restrict": false,
+        "MaxPurchase": 0,
+        "Command": ["m4a1", "m4s"],
+        "Price": 3100
     },
     "sg556": {
+        "WeaponName": "SG556",
         "EntityName": "weapon_sg556",
-        "Knockback": 1.1
+        "Knockback": 1.1,
+        "Restrict": false,
+        "MaxPurchase": 0,
+        "Command": ["sg556"],
+        "Price": 3300
     },
     "aug": {
+        "WeaponName": "AUG",
         "EntityName": "weapon_aug",
-        "Knockback": 1.1
+        "Knockback": 1.1,
+        "Restrict": false,
+        "MaxPurchase": 0,
+        "Command": ["aug"],
+        "Price": 3300
     },
 
     // Sniper
     "ssg08": {
+        "WeaponName": "SSG 08",
         "EntityName": "weapon_ssg08",
-        "Knockback": 0.8
+        "Knockback": 0.8,
+        "Restrict": false,
+        "MaxPurchase": 0,
+        "Command": ["scout", "ssg08"],
+        "Price": 1200
     },
     "awp": {
+        "WeaponName": "AWP",
         "EntityName": "weapon_awp",
-        "Knockback": 0.8
+        "Knockback": 0.8,
+        "Restrict": false,
+        "MaxPurchase": 0,
+        "Command": ["awp"],
+        "Price": 4750
     },
     "g3sg1": {
+        "WeaponName": "G3SG1",
         "EntityName": "weapon_g3sg1",
-        "Knockback": 1.0
+        "Knockback": 1.0,
+        "Restrict": false,
+        "MaxPurchase": 0,
+        "Command": ["g3sg1"],
+        "Price": 5000
     },
     "scar20": {
+        "WeaponName": "SCAR-20",
         "EntityName": "weapon_scar20",
-        "Knockback": 1.0
+        "Knockback": 1.0,
+        "Restrict": false,
+        "MaxPurchase": 0,
+        "Command": ["scar", "scar20"],
+        "Price": 5000
     },
 
     // Machine gun
     "m249": {
+        "WeaponName": "M249",
         "EntityName": "weapon_m249",
-        "Knockback": 1.0
+        "Knockback": 1.0,
+        "Restrict": false,
+        "MaxPurchase": 0,
+        "Command": ["m249"],
+        "Price": 5000
     },
     "negev": {
+        "WeaponName": "Negev",
         "EntityName": "weapon_negev",
-        "Knockback": 1.0
+        "Knockback": 1.0,
+        "Restrict": false,
+        "MaxPurchase": 0,
+        "Command": ["negev"],
+        "Price": 5000
     },
 
     // Knife
     "knife": {
+        "WeaponName": "Knife",
         "EntityName": "weapon_knife",
-        "Knockback": 5.0
+        "Knockback": 5.0,
+        "Restrict": false,
+        "MaxPurchase": 0,
+        "Command": [],
+        "Price": 0
     }
 }
