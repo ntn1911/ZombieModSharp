@@ -173,6 +173,12 @@ public class Hooks : IHooks
             }
             else if(param.Method == EAcquireMethod.Buy)
             {
+                if(_playerManager.GetOrCreatePlayer(param.Client).IsInfected())
+                {
+                    param.Controller.Print(HudPrintChannel.Chat, $"{ZombieModSharp.Prefix} You have to be human to purchase weapon!");
+                    return new HookReturnValue<EAcquireResult>(EHookAction.SkipCallReturnOverride, EAcquireResult.NotAllowedByProhibition);
+                }
+                
                 var weaponTarget = _weapons.GetWeaponDataWithEntityName(definationName);
 
                 if(weaponTarget != null)
