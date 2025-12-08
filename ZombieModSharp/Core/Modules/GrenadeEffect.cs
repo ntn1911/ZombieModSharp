@@ -117,6 +117,8 @@ public class GrenadeEffect : IGrenadeEffect
             
         var grenadePos = grenade.GetAbsOrigin();
 
+        EmitFreezeEffect(grenadePos);
+
         foreach(var client in _playerManager.GetAllPlayers().Where(p => p.Value.IsInfected()))
         {
             var pawn = client.Key.GetPlayerController()?.GetPlayerPawn();
@@ -166,6 +168,20 @@ public class GrenadeEffect : IGrenadeEffect
         entity?.AddIOEvent(duration, "Kill");
 
         grenade.Kill();
+    }
+
+    private void EmitFreezeEffect(Vector position)
+    {
+        var kv = new Dictionary<string, KeyValuesVariantValueItem>
+        {
+            { "effect_name", "particles/oylsister/freeze_beacon.vpcf" },
+            { "tint_cp", 1 },
+            { "start_active", true }
+        };
+
+        var entity = _entityManager.SpawnEntitySync("info_particle_system", kv);
+        entity?.Teleport(position);
+        entity?.AddIOEvent(1.0f, "Kill");
     }
 
     private float GetDistance(Vector a, Vector b)
