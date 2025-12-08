@@ -11,7 +11,7 @@ namespace ZombieModSharp.Core.Modules;
 
 public class Command : ICommand
 {
-    private readonly IPlayerManager _player;
+    private readonly IPlayerManager _playerManager;
     private readonly IZTele _ztele;
     private readonly IInfect _infect;
     private readonly ISharedSystem _sharedSystem;
@@ -21,9 +21,9 @@ public class Command : ICommand
     private readonly ICvarServices _cvarServices;
     private readonly IGrenadeEffect _grenadeEffect;
 
-    public Command(IPlayerManager player, IZTele ztele, IInfect infect, ISharedSystem sharedSystem, ICommandManager command, ISqliteDatabase sqlite, ICvarServices cvarServices, IGrenadeEffect grenadeEffect)
+    public Command(IPlayerManager playerManager, IZTele ztele, IInfect infect, ISharedSystem sharedSystem, ICommandManager command, ISqliteDatabase sqlite, ICvarServices cvarServices, IGrenadeEffect grenadeEffect)
     {
-        _player = player;
+        _playerManager = playerManager;
         _ztele = ztele;
         _infect = infect;
         _sharedSystem = sharedSystem;
@@ -42,11 +42,12 @@ public class Command : ICommand
         _command.RegisterClientCommand("zsound", ZSoundCommand);
         _command.RegisterAdminCommand("togglerespawn", ToggleRespawnCommand, "slay");
         _command.RegisterAdminCommand("burnme", BurnTestCommand, "slay");
+        _command.RegisterAdminCommand("extragrenade", ExtraGrenadeTest, "slay");
     }
 
     private void ZTeleCommand(IGameClient client, StringCommand command)
     {
-        var playerInfo = _player.GetOrCreatePlayer(client);
+        var playerInfo = _playerManager.GetOrCreatePlayer(client);
 
         if (client == null || playerInfo == null)
             return;
@@ -140,7 +141,7 @@ public class Command : ICommand
 
     private void ZSoundCommand(IGameClient client, StringCommand command)
     {
-        var player = _player.GetOrCreatePlayer(client);
+        var player = _playerManager.GetOrCreatePlayer(client);
         float volume = 100.0f;
 
         if(command.ArgCount < 1)
@@ -211,6 +212,14 @@ public class Command : ICommand
         _grenadeEffect.IgnitePawn(player, 1, 5);
     }
 
+    private void ExtraGrenadeTest(IGameClient client, StringCommand command)
+    {
+        var player = _playerManager.GetOrCreatePlayer(client);
+
+        player.AllowExtraGrenade = !player.AllowExtraGrenade;
+        ReplyToCommand(client, $"AllowExtraGrenade: {player.AllowExtraGrenade}");
+    }
+
     public void ReplyToCommand(IGameClient client, string text)
     {
         if (client == null)
@@ -232,7 +241,7 @@ public class Command : ICommand
 
         if (string.Equals(target, "@all", StringComparison.OrdinalIgnoreCase))
         {
-            targets.AddRange(_player.GetAllPlayers().Select(p => p.Key));
+            targets.AddRange(_playerManager.GetAllPlayers().Select(p => p.Key));
         }
         else if (string.Equals(target, "@me", StringComparison.OrdinalIgnoreCase))
         {
@@ -241,31 +250,31 @@ public class Command : ICommand
         }
         else if (string.Equals(target, "@zombies", StringComparison.OrdinalIgnoreCase))
         {
-            targets.AddRange(_player.GetAllPlayers().Where(p => p.Value.IsInfected()).Select(p => p.Key));
+            targets.AddRange(_playerManager.GetAllPlayers().Where(p => p.Value.IsInfected()).Select(p => p.Key));
         }
         else if (string.Equals(target, "@humans", StringComparison.OrdinalIgnoreCase))
         {
-            targets.AddRange(_player.GetAllPlayers().Where(p => !p.Value.IsInfected()).Select(p => p.Key));
+            targets.AddRange(_playerManager.GetAllPlayers().Where(p => !p.Value.IsInfected()).Select(p => p.Key));
         }
         else if (string.Equals(target, "@ct", StringComparison.OrdinalIgnoreCase))
         {
-            targets.AddRange(_player.GetAllPlayers().Where(p =>
+            targets.AddRange(_playerManager.GetAllPlayers().Where(p =>
                 p.Key.GetPlayerController()?.Team == CStrikeTeam.CT).Select(p => p.Key));
         }
         else if (string.Equals(target, "@t", StringComparison.OrdinalIgnoreCase))
         {
-            targets.AddRange(_player.GetAllPlayers().Where(p =>
+            targets.AddRange(_playerManager.GetAllPlayers().Where(p =>
                 p.Key.GetPlayerController()?.Team == CStrikeTeam.TE).Select(p => p.Key));
         }
         else if (string.Equals(target, "@bot", StringComparison.OrdinalIgnoreCase))
         {
-            targets.AddRange(_player.GetAllPlayers().Where(p => p.Key.IsFakeClient && !p.Key.IsHltv).Select(p => p.Key));
+            targets.AddRange(_playerManager.GetAllPlayers().Where(p => p.Key.IsFakeClient && !p.Key.IsHltv).Select(p => p.Key));
         }
 
         // find the name of 
         else
         {
-            targets.AddRange(_player.GetAllPlayers().Where(p => p.Key.Name.Contains(target, StringComparison.OrdinalIgnoreCase)).Select(p => p.Key));
+            targets.AddRange(_playerManager.GetAllPlayers().Where(p => p.Key.Name.Contains(target, StringComparison.OrdinalIgnoreCase)).Select(p => p.Key));
         }
 
         return targets;

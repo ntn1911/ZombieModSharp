@@ -1,6 +1,7 @@
 using Sharp.Shared;
 using Sharp.Shared.Enums;
 using Sharp.Shared.GameEntities;
+using Sharp.Shared.GameObjects;
 using Sharp.Shared.HookParams;
 using Sharp.Shared.Managers;
 using Sharp.Shared.Types;
@@ -85,6 +86,21 @@ public class Hooks : IHooks
             return new HookReturnValue<bool>(EHookAction.SkipCallReturnOverride, false);
         }
 
+        // we check grenade number here.
+        var weapons = param.Pawn.GetWeaponService()?.GetMyWeapons();
+        
+        if(weapons != null)
+        {
+            foreach (var item in weapons)
+            {
+                if(_entityManager.FindEntityByHandle(item)?.ItemDefinitionIndex == (ushort)EconItemId.Hegrenade)
+                {
+                    if(!client.AllowExtraGrenade)
+                        return new HookReturnValue<bool>(EHookAction.SkipCallReturnOverride, false);
+                }
+            }
+        }
+
         //_modsharp.PrintChannelAll(HudPrintChannel.Chat, $"This is {result.Action} and {result.ReturnValue}");
         return result;
     }
@@ -140,13 +156,9 @@ public class Hooks : IHooks
 
     private HookReturnValue<EAcquireResult> OnCanAcquire(IPlayerCanAcquireHookParams param, HookReturnValue<EAcquireResult> result)
     {
-        var method = param.Method;
-
         var index = param.ItemDefinitionIndex;
         var econItem = _econItemManager.GetEconItemDefinitionByIndex(index);
         var definationName = econItem?.DefinitionName;
-        var className = econItem?.ItemClassName;
-        var name = econItem?.ItemBaseName;
 
         // _modsharp.PrintToChatAll($"Player {param.Client.Name} has received {name} | {className} | {definationName}");
 
