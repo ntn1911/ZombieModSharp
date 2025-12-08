@@ -50,7 +50,7 @@ public class GrenadeEffect : IGrenadeEffect
         {
             if(particle == null)
             {
-                _modsharp.PrintToChatAll("Is fucking null");
+                //_modsharp.PrintToChatAll("Is fucking null");
                 return false;
             }
 
@@ -59,7 +59,7 @@ public class GrenadeEffect : IGrenadeEffect
             particle.Teleport(playerPawn.GetAbsOrigin());
             particle.AcceptInput("SetParent", playerPawn, null, "!activator");
 
-            _modsharp.PrintToChatAll("It does work for some reason");
+            // _modsharp.PrintToChatAll("It does work for some reason");
 
             playerPawn.EffectEntityHandle = particle.Handle;
 
@@ -133,6 +133,7 @@ public class GrenadeEffect : IGrenadeEffect
             if(distance <= distanceLimit)
             {
                 pawn.SetMoveType(MoveType.None);
+                pawn.Teleport();
 
                 _modsharp.PushTimer(() =>
                 {

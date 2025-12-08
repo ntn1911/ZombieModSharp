@@ -238,6 +238,11 @@ public class Listeners : IListeners, IClientListener, IGameListener, IEntityList
             }
         }
 
+        if(entity.Classname.Contains("_projectile"))
+        {
+            entity.SetCollisionGroup(CollisionGroupType.Debris);
+        }
+
         if(entity.Classname.Contains("smokegrenade_projectile") || entity.Classname.Contains("decoy_projectile"))
         {
             _modsharp.PushTimer(() =>
