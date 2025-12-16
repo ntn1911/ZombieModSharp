@@ -25,7 +25,8 @@ public static class ServiceCollectionExtensions
             .AddSingleton<IPrecacheManager, PrecacheManager>()
             .AddSingleton<ISoundServices, SoundServices>()
             .AddSingleton<IRespawnServices, RespawnServices>()
-            .AddSingleton<IGrenadeEffect, GrenadeEffect>();
+            .AddSingleton<IGrenadeEffect, GrenadeEffect>()
+            .AddSingleton<IHitmarkerServices, HitmarkerServices>();
 
         return services;
     }

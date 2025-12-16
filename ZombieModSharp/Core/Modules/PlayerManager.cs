@@ -79,4 +79,9 @@ public class Player
     public int TotalInfect { get; set; }
     public bool AllowExtraGrenade { get; set; } = false;
     public bool MotherZombieImmune { get; set; } = false;
+
+    // Hitmarker.
+    public IBaseParticle? HitmarkerBody { get; set; }
+    public IBaseParticle? HitmarkerHead { get; set; }
+    public IBaseParticle? HitmarkerProp { get; set; }
 }

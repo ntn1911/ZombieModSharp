@@ -53,6 +53,11 @@ public class CvarServices : ICvarServices
         CvarList["Cvar_ZTeleDelay"] = _conVarManager.CreateConVar("zms_ztele_delay", 5.0f, "Delay timer before player can get teleported with ztele command", ConVarFlags.Release);
         // we check if covar existed or not.
 
+        // Hitmarker
+        CvarList["Cvar_HitmarkerBody"] = _conVarManager.CreateConVar("zms_hitmarker_body", "", "Hitmarker particle file path for body", ConVarFlags.Release);
+        CvarList["Cvar_HitmarkerHead"] = _conVarManager.CreateConVar("zms_hitmarker_head", "", "Hitmarker particle file path for head", ConVarFlags.Release);
+        CvarList["Cvar_HitmarkerProp"] = _conVarManager.CreateConVar("zms_hitmarker_prop", "", "Hitmarker particle file path for prop", ConVarFlags.Release);
+
         _conVarManager.InstallChangeHook(CvarList["Cvar_InfectKnockbackScale"]!, OnConVarChange);
         _conVarManager.InstallChangeHook(CvarList["Cvar_RespawnEnabled"]!, OnConVarChange);
         _conVarManager.InstallChangeHook(CvarList["Cvar_InfectDamageCash"]!, OnConVarChange);
