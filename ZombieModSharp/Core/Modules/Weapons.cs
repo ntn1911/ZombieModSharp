@@ -175,6 +175,24 @@ public class Weapons : IWeapons
             return;
         }
 
+        if(weapon.EntityName == "item_assaultsuit")
+        {
+            var armor = pawn.ArmorValue;
+            
+            if(armor < 100)
+            {
+                pawn.GiveNamedItem(EconItemId.AssaultSuit);
+                PrintToChat(client, $"You have purchased weapon \x05{weapon.WeaponName}\x01. {(weapon.MaxPurchase > 0 ? $"Purchases available left: ({weapon.MaxPurchase - player.PurchaseHistory[weapon.WeaponName]}/{weapon.MaxPurchase})" : "")}");
+                return;
+            }
+
+            else
+            {
+                PrintToChat(client, $"Your armor still good! try again once it got damaged.");
+                return;
+            }
+        }
+
         // force drop weapon mostly.
         if(weapon.WeaponSlot <= (int)GearSlot.Pistol)
         {

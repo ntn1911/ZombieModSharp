@@ -407,5 +407,15 @@
         "MaxPurchase": 2,
         "Command": ["decoy"],
         "Price": 500
+    },
+    "Kevlar": {
+        "WeaponName": "Kevlar",
+        "EntityName": "item_assaultsuit",
+        "WeaponSlot": 4,
+        "Knockback": 0.0,
+        "Restrict": false,
+        "MaxPurchase": 0,
+        "Command": ["kev", "kevlar"],
+        "Price": 1000
     }
 }
