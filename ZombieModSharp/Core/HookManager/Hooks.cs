@@ -1,9 +1,11 @@
 using Sharp.Shared;
 using Sharp.Shared.Enums;
 using Sharp.Shared.GameEntities;
+using Sharp.Shared.GameEvents;
 using Sharp.Shared.GameObjects;
 using Sharp.Shared.HookParams;
 using Sharp.Shared.Managers;
+using Sharp.Shared.Objects;
 using Sharp.Shared.Types;
 using ZombieModSharp.Abstractions;
 
@@ -190,5 +192,8 @@ public class Hooks : IHooks
         }
 
         return result;
+
+
     }
+    
 }

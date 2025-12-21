@@ -26,7 +26,10 @@ public static class ServiceCollectionExtensions
             .AddSingleton<ISoundServices, SoundServices>()
             .AddSingleton<IRespawnServices, RespawnServices>()
             .AddSingleton<IGrenadeEffect, GrenadeEffect>()
-            .AddSingleton<IHitmarkerServices, HitmarkerServices>();
+            .AddSingleton<IHitmarkerServices, HitmarkerServices>()
+            .AddSingleton<IMarkerServices, MarkerServices>()
+            .AddSingleton<IGlowServices, GlowServices>()
+            .AddSingleton<ILeaderServices, LeaderServices>();
 
         return services;
     }

@@ -6,6 +6,7 @@ using Sharp.Shared.GameEvents;
 using Sharp.Shared.Listeners;
 using Sharp.Shared.Managers;
 using Sharp.Shared.Objects;
+using Sharp.Shared.Types;
 using Sharp.Shared.Units;
 using ZombieModSharp.Abstractions;
 using ZombieModSharp.Core.Modules;
@@ -27,13 +28,15 @@ public class Events : IEvents
     private readonly ISoundServices _soundServices;
     private readonly IRespawnServices _respawnServices;
     private readonly IHitmarkerServices _hitmarkerServices;
+    private readonly IGlowServices _glowServices;
+    private readonly ILeaderServices _LeaderServices;
 
     public int ListenerVersion => IEventListener.ApiVersion;
     public int ListenerPriority => 0;
 
     public bool RoundEnded { get; private set; } = false;
 
-    public Events(ISharedSystem sharedSystem, IGameEventManager gameEventManager, ILogger<Events> logger, IPlayerManager playerManager, IInfect infect, IZTele ztele, IKnockback knockback, ICvarServices cvarServices, ISoundServices soundServices, IRespawnServices respawnServices, IHitmarkerServices hitmarkerServices)
+    public Events(ISharedSystem sharedSystem, IGameEventManager gameEventManager, ILogger<Events> logger, IPlayerManager playerManager, IInfect infect, IZTele ztele, IKnockback knockback, ICvarServices cvarServices, ISoundServices soundServices, IRespawnServices respawnServices, IHitmarkerServices hitmarkerServices, IGlowServices glowMethod, ILeaderServices leaderServices)
     {
         _sharedSystem = sharedSystem;
         _gameEventManager = gameEventManager;
@@ -47,6 +50,8 @@ public class Events : IEvents
         _soundServices = soundServices;
         _respawnServices = respawnServices;
         _hitmarkerServices = hitmarkerServices;
+        _glowServices = glowMethod;
+        _LeaderServices = leaderServices;
     }
 
     public void Init()
@@ -65,6 +70,27 @@ public class Events : IEvents
         _gameEventManager.ListenEvent("round_freeze_end", OnRoundFreezeEnd);
         _gameEventManager.ListenEvent("warmup_end", OnWarmupEnd);
         _gameEventManager.ListenEvent("weapon_fire", OnWeaponFired);
+        _gameEventManager.HookEvent("player_death", OnPlayerDeath);
+    }
+
+    private HookReturnValue<bool> OnPlayerDeath(IGameEvent e, ref bool serverOnly)
+    {
+        if (e is not IEventPlayerDeath deathEvent)
+            return new HookReturnValue<bool>();
+
+        var victim = deathEvent.VictimController;
+        if (victim != null && victim.IsValid())
+        {
+            // 如果是 Leader，死亡時關閉 Glow
+            if (_LeaderServices.IsLeader(victim))
+            {
+                _glowServices.DisablePlayerGlow(victim);
+            }
+        }
+
+        // 原始事件只給伺服器，不給客戶端
+        serverOnly = true;
+        return new HookReturnValue<bool>();
     }
 
     private void OnPlayerHurt(IGameEvent e)
