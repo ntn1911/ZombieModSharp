@@ -70,28 +70,28 @@ public class Command : ICommand
 
         if (target == null || !target.IsValid)
         {
-            client.ConsolePrint("Can't find any player");
+            ReplyToCommand(client, "Can't find any player");
             return;
         }
 
         var controller = target.GetPlayerController();
         if (controller == null || !controller.IsValid())
         {
-            client.ConsolePrint("Can't find any player controller");
+            ReplyToCommand(client, "Can't find any player controller");
             return;
         }
         var pawn = controller.GetPlayerPawn();
 
         if (pawn == null)
         {
-            client.ConsolePrint($"Entity {controller.PlayerName} have no Pawn¡Acan't Glow");
+            ReplyToCommand(client, $"Entity {controller.PlayerName} have no Pawn¡Acan't Glow");
             return;
         }
 
         _glowServices.CreateGlow(target, pawn,
             new Color32(255, 0, 0, 255), 13000, GlowVisibleMode.SameTeam);
 
-        client.ConsolePrint($"{controller.PlayerName} Glow¡I");
+        ReplyToCommand(client, $"{controller.PlayerName} Glow¡I");
         
     }
 
@@ -105,18 +105,18 @@ public class Command : ICommand
 
         if (target == null || !target.IsValid)
         {
-            client.ConsolePrint("Can't find any player");
+            ReplyToCommand(client, "Can't find any player");
             return;
         }
         var controller = target.GetPlayerController();
         if (controller == null || !controller.IsValid())
         {
-            client.ConsolePrint("Can't find any player controller");
+            ReplyToCommand(client, "Can't find any player controller");
             return;
         }
 
         _glowServices.DisablePlayerGlow(controller);
-        client.ConsolePrint($"Player {controller.PlayerName} disable glow!");
+        ReplyToCommand(client, $"Player {controller.PlayerName} disable glow!");
         
     }
     private void OnMarkerCommand(IGameClient client, StringCommand command)
@@ -152,9 +152,9 @@ public class Command : ICommand
         var placePos = hitPos + new Vector(0, 0, 1.0f);
 
         if (_markerServices.CreateMarker(client, placePos))
-            controller.Print(HudPrintChannel.Chat, "Placed the marker¡I");
+            ReplyToCommand(client, "Placed the marker¡I");
         else
-            controller.Print(HudPrintChannel.Chat, "Marker Placed failed¡I");
+            ReplyToCommand(client, "Marker Placed failed¡I");
 
         
     }
@@ -163,7 +163,7 @@ public class Command : ICommand
     {
 
         _markerServices.DisableLastMarker();
-        client.ConsolePrint("Your marker has been removed.");
+        ReplyToCommand(client, "Your marker has been removed.");
         return;
     }
 
@@ -181,33 +181,26 @@ public class Command : ICommand
         
         if (target == null || !target.IsValid)
         {
-            client.ConsolePrint("Can't find any player");
-            return;
-        }
-
-        var admin = _sharedSystem!.GetClientManager().FindAdmin(client.SteamId);
-        if (admin == null || !admin.HasPermission("jl"))
-        {
-            client.ConsolePrint("Sorry, But you have no permission add you into leader list");
+            ReplyToCommand(client,"Can't find any player");
             return;
         }
 
         var target_controller = target.GetPlayerController();
         if (target_controller == null || !target_controller.IsValid())
         {
-            client.ConsolePrint("Can't find any player controller");
+            ReplyToCommand(client,"Can't find any player controller");
             return;
         }
 
         if (_leaderServices.IsLeader(target_controller))
         {
-            client.ConsolePrint($"{target.Name} is already a leader¡I");
+            ReplyToCommand(client,$"{target.Name} is already a leader¡I");
             return;
         }
 
         if (_leaderServices.AssignLeader(target_controller))
         {
-            client.ConsolePrint($"{target_controller.GetGameClient()?.Name} is leader now¡I");
+            ReplyToCommand(client,$"{target_controller.GetGameClient()?.Name} is leader now¡I");
 
             target_controller.SetClanTag(" [Leader]  ");
             _leaderServices.UpdateClientClanTags();
@@ -226,7 +219,7 @@ public class Command : ICommand
         }
         else
         {
-            client.ConsolePrint($"Failed to assign leader to {target_controller.PlayerName}");
+            ReplyToCommand(client,$"Failed to assign leader to {target_controller.PlayerName}");
         }
         
     }
@@ -244,20 +237,20 @@ public class Command : ICommand
 
         if (target == null || !target.IsValid)
         {
-            client.ConsolePrint("Can't find any player");
+            ReplyToCommand(client, "Can't find any player");
             return;
         }
 
         var target_controller = target.GetPlayerController();
         if (target_controller == null || !target_controller.IsValid())
         {
-            client.ConsolePrint("Can't find any player controller");
+            ReplyToCommand(client, "Can't find any player controller");
             return;
         }
 
         if (!_leaderServices.IsLeader(target_controller))
         {
-            client.ConsolePrint($"{target_controller.PlayerName} is not a leader¡I");
+            ReplyToCommand(client, $"{target_controller.PlayerName} is not a leader¡I");
             return;
         }
 
@@ -265,12 +258,12 @@ public class Command : ICommand
         {
             target_controller.SetClanTag("");
             _leaderServices.UpdateClientClanTags();
-            client.ConsolePrint($"{target_controller.PlayerName} has quit being a leader¡I");
+            ReplyToCommand(client, $"{target_controller.PlayerName} has quit being a leader¡I");
             _glowServices.DisablePlayerGlow(target_controller);
         }
         else
         {
-            client.ConsolePrint($"Failed to quit leader for {target_controller.PlayerName}");
+            ReplyToCommand(client, $"Failed to quit leader for {target_controller.PlayerName}");
         }
 
         
