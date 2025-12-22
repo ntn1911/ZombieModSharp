@@ -8,6 +8,7 @@ using Sharp.Shared.Types;
 using System.Runtime.InteropServices;
 using ZombieModSharp.Abstractions;
 using ZombieModSharp.Abstractions.Storage;
+using static ZombieModSharp.Abstractions.IGlowServices;
 
 namespace ZombieModSharp.Core.Modules;
 
@@ -55,17 +56,79 @@ public class Command : ICommand
         _command.RegisterAdminCommand("ql", OnQuitLeaderCommand, "slay");
         _command.RegisterAdminCommand("pm", OnMarkerCommand, "slay");
         _command.RegisterAdminCommand("dm", OnDisableMarkerCommand, "slay");
+        _command.RegisterAdminCommand("glow", OnGlowCommand, "slay");
+        _command.RegisterAdminCommand("disglow", OnDisableGlowCommand, "slay");
+    }
+
+
+    public void OnGlowCommand(IGameClient client, StringCommand command)
+    {
+        if (!client.IsValid) return;
+        var client_Controller = client.GetPlayerController();
+
+        if (client_Controller == null || !client_Controller.IsValid())
+        {
+            client.ConsolePrint("Can't find any player controller");
+            return;
+        }
+
+        var arg = command.GetArg(1);
+        var target = GetTargets(client, arg).FirstOrDefault();
+
+        if (target == null || !target.IsValid)
+        {
+            client.ConsolePrint("Can't find any player");
+            return;
+        }
+
+        var controller = target.GetPlayerController();
+        if (controller == null || !controller.IsValid())
+        {
+            client.ConsolePrint("Can't find any player controller");
+            return;
+        }
+        var pawn = controller.GetPlayerPawn();
+
+        if (pawn == null)
+        {
+            client.ConsolePrint($"Entity {controller.PlayerName} have no Pawn，can't Glow");
+            return;
+        }
+
+        _glowServices.CreateGlow(target, pawn,
+            new Color32(255, 0, 0, 255), 13000, GlowVisibleMode.SameTeam);
+
+        client.ConsolePrint($"{controller.PlayerName} Glow！");
+        
+    }
+
+    public void OnDisableGlowCommand(IGameClient client, StringCommand command)
+    {
+        if (!client.IsValid)
+            return;
+
+        var arg = command.GetArg(1);
+        var target = GetTargets(client, arg).FirstOrDefault();
+
+        if (target == null || !target.IsValid)
+        {
+            client.ConsolePrint("Can't find any player");
+            return;
+        }
+        var controller = target.GetPlayerController();
+        if (controller == null || !controller.IsValid())
+        {
+            client.ConsolePrint("Can't find any player controller");
+            return;
+        }
+
+        _glowServices.DisablePlayerGlow(controller);
+        client.ConsolePrint($"已對玩家 {controller.PlayerName} 停用 Glow！");
+        
     }
     private void OnMarkerCommand(IGameClient client, StringCommand command)
     {
         if (!client.IsValid) return;
-
-        var admin = _sharedSystem.GetClientManager().FindAdmin(client.SteamId);
-        if (admin == null || !admin.HasPermission("marker"))
-        {
-            client.ConsolePrint("Sorry, But you have no permission place marker");
-            return;
-        }
 
         var controller = client.GetPlayerController();
         if (controller is null || !controller.IsValid()) return;
@@ -98,19 +161,13 @@ public class Command : ICommand
         if (_markerServices.CreateMarker(client, placePos))
             controller.Print(HudPrintChannel.Chat, "Placed the marker！");
         else
-            controller.Print(HudPrintChannel.Chat, "標記建立失敗！");
+            controller.Print(HudPrintChannel.Chat, "Marker Placed failed！");
 
-        return;
+        
     }
 
     private void OnDisableMarkerCommand(IGameClient client, StringCommand command)
     {
-        var admin = _sharedSystem.GetClientManager().FindAdmin(client.SteamId);
-        if (admin == null || !admin.HasPermission("unmarker"))
-        {
-            client.ConsolePrint("Sorry, But you have no permission for Unmarker");
-            return;
-        }
 
         _markerServices.DisableLastMarker();
         client.ConsolePrint("Your marker has been removed.");
