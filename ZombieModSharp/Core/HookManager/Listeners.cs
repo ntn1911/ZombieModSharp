@@ -64,7 +64,6 @@ public class Listeners : IListeners, IClientListener, IGameListener, IEntityList
         var clientManager = _sharedSystem.GetClientManager();
         clientManager.InstallClientListener(this);
         clientManager.InstallCommandListener("jointeam", OnJoinTeamCommand);
-        var test_manager = _sharedSystem.GetModSharp();
         
         clientManager.InstallCommandListener("player_ping", OnPlayerPing);
 
@@ -168,22 +167,6 @@ public class Listeners : IListeners, IClientListener, IGameListener, IEntityList
             _modsharp.ServerCommand($"exec zombiemodsharp/{mapname}.cfg");
         }
     }
-
-    private ECommandAction OnJoinTeamCommand(IGameClient client, StringCommand command)
-    {
-        var team = (CStrikeTeam)int.Parse(command.GetArg(1));
-
-        var allowJoinLate = _cvarServices.CvarList["Cvar_RespawnLateJoin"]?.GetBool() ?? false;
-
-        if(team == CStrikeTeam.TE || team == CStrikeTeam.CT)
-        {
-            if(allowJoinLate)
-                _respawnServices.InitRespawn(client.GetPlayerController());
-        }
-
-        return ECommandAction.Skipped;
-    }
-
     public void OnRoundRestarted()
     {
         _markerServices.CleanupAll();
@@ -208,6 +191,21 @@ public class Listeners : IListeners, IClientListener, IGameListener, IEntityList
                 IGlowServices.GlowVisibleMode.ExceptTarget
             );
         }
+    }
+
+    private ECommandAction OnJoinTeamCommand(IGameClient client, StringCommand command)
+    {
+        var team = (CStrikeTeam)int.Parse(command.GetArg(1));
+
+        var allowJoinLate = _cvarServices.CvarList["Cvar_RespawnLateJoin"]?.GetBool() ?? false;
+
+        if(team == CStrikeTeam.TE || team == CStrikeTeam.CT)
+        {
+            if(allowJoinLate)
+                _respawnServices.InitRespawn(client.GetPlayerController());
+        }
+
+        return ECommandAction.Skipped;
     }
 
     private ECommandAction OnPlayerPing(IGameClient client, StringCommand command)

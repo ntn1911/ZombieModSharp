@@ -215,63 +215,6 @@ public class GlowServices : IGlowServices
 
         return partial;
     }
-
-    
-    public ECommandAction OnGlowCommand(IGameClient client, StringCommand command)
-    {
-        if (!client.IsValid) return ECommandAction.Stopped;
-
-        var admin = _sharedSystem.GetClientManager().FindAdmin(client.SteamId);
-        if (admin == null || !admin.HasPermission("glow"))
-        {
-            client.ConsolePrint("Sorry, But you have no permission to glow player");
-            return ECommandAction.Stopped;
-        }
-
-        var target = FindTargetPlayer(command, client);
-        if (target == null)
-        {
-            client.ConsolePrint("Can't find any player");
-            return ECommandAction.Stopped;
-        }
-
-        var pawn = target.GetPlayerPawn();
-        if (pawn == null)
-        {
-            client.ConsolePrint($"Entity {target.PlayerName} have no Pawn，can't Glow");
-            return ECommandAction.Stopped;
-        }
-
-        CreateGlow(target.GetGameClient()!, pawn.AsPlayer()!,
-            new Color32(255, 0, 0, 255), 13000, IGlowServices.GlowVisibleMode.SameTeam);
-
-        client.ConsolePrint($"{target.PlayerName} Glow！");
-        return ECommandAction.Stopped;
-    }
-
-    public ECommandAction OnDisableGlowCommand(IGameClient client, StringCommand command)
-    {
-        if (!client.IsValid)
-            return ECommandAction.Stopped;
-
-        var admin = _sharedSystem.GetClientManager().FindAdmin(client.SteamId);
-        if (admin == null || !admin.HasPermission("disglow"))
-        {
-            client.ConsolePrint("Sorry, But you have no permission for disable glow on player");
-            return ECommandAction.Stopped;
-        }
-
-        var target = FindTargetPlayer(command, client);
-        if (target == null)
-        {
-            client.ConsolePrint("找不到指定的玩家");
-            return ECommandAction.Stopped;
-        }
-
-        DisablePlayerGlow(target);
-        client.ConsolePrint($"已對玩家 {target.PlayerName} 停用 Glow！");
-        return ECommandAction.Stopped;
-    }
 }
 
 
