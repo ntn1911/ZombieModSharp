@@ -64,13 +64,6 @@ public class Command : ICommand
     public void OnGlowCommand(IGameClient client, StringCommand command)
     {
         if (!client.IsValid) return;
-        var client_Controller = client.GetPlayerController();
-
-        if (client_Controller == null || !client_Controller.IsValid())
-        {
-            client.ConsolePrint("Can't find any player controller");
-            return;
-        }
 
         var arg = command.GetArg(1);
         var target = GetTargets(client, arg).FirstOrDefault();
