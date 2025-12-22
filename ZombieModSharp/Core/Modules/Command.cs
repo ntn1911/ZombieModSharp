@@ -123,7 +123,7 @@ public class Command : ICommand
         }
 
         _glowServices.DisablePlayerGlow(controller);
-        client.ConsolePrint($"已對玩家 {controller.PlayerName} 停用 Glow！");
+        client.ConsolePrint($"Player {controller.PlayerName} disable glow!");
         
     }
     private void OnMarkerCommand(IGameClient client, StringCommand command)
@@ -136,7 +136,7 @@ public class Command : ICommand
         var pawn = controller.GetPawn();
         if (pawn == null || !pawn.IsValid() || !pawn.IsAlive)
         {
-            controller.Print(HudPrintChannel.Chat, "你必須活著才能放置標記！");
+            controller.Print(HudPrintChannel.Chat, "You need to be alive and valid to place marker!");
             return;
         }
 
