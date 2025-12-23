@@ -26,14 +26,13 @@ public class Events : IEvents
     private readonly ICvarServices _cvarServices;
     private readonly ISoundServices _soundServices;
     private readonly IRespawnServices _respawnServices;
-    private readonly IHitmarkerServices _hitmarkerServices;
 
     public int ListenerVersion => IEventListener.ApiVersion;
     public int ListenerPriority => 0;
 
     public bool RoundEnded { get; private set; } = false;
 
-    public Events(ISharedSystem sharedSystem, IGameEventManager gameEventManager, ILogger<Events> logger, IPlayerManager playerManager, IInfect infect, IZTele ztele, IKnockback knockback, ICvarServices cvarServices, ISoundServices soundServices, IRespawnServices respawnServices, IHitmarkerServices hitmarkerServices)
+    public Events(ISharedSystem sharedSystem, IGameEventManager gameEventManager, ILogger<Events> logger, IPlayerManager playerManager, IInfect infect, IZTele ztele, IKnockback knockback, ICvarServices cvarServices, ISoundServices soundServices, IRespawnServices respawnServices)
     {
         _sharedSystem = sharedSystem;
         _gameEventManager = gameEventManager;
@@ -46,7 +45,6 @@ public class Events : IEvents
         _cvarServices = cvarServices;
         _soundServices = soundServices;
         _respawnServices = respawnServices;
-        _hitmarkerServices = hitmarkerServices;
     }
 
     public void Init()
@@ -87,7 +85,6 @@ public class Events : IEvents
         var zmAttacker = _playerManager.GetOrCreatePlayer(attackerClient);
 
         var hitGroup = e.GetInt("hitgroup");
-        _hitmarkerServices.OnPlayerHurt(attackerClient, hitGroup == 1);
 
         if (zmClient.IsHuman() && zmAttacker.IsInfected())
         {
