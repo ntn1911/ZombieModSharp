@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Logging;
 using Sharp.Shared;
-using Sharp.Shared.Definition;
 using Sharp.Shared.Enums;
 using Sharp.Shared.GameEntities;
 using Sharp.Shared.Listeners;
@@ -35,11 +34,8 @@ public class Listeners : IListeners, IClientListener, IGameListener, IEntityList
     private readonly IEntityManager _entityManager;
     private readonly IWeapons _weapons;
     private readonly IGrenadeEffect _grenadeEffect;
-    private readonly IMarkerServices _markerServices;
-    private readonly IGlowServices _glowServices;
-    private readonly ILeaderServices _leaderServices;
 
-    public Listeners(IPlayerManager playerManager, ISharedSystem sharedSystem, ISqliteDatabase sqlite, ICvarServices cvarServices, IPlayerClasses playerClasses, IPrecacheManager precacheManager, IRespawnServices respawnServices, IWeapons weapons, IGrenadeEffect grenadeEffect, IMarkerServices markerServices, ILeaderServices leaderServices, IGlowServices glowServices)
+    public Listeners(IPlayerManager playerManager, ISharedSystem sharedSystem, ISqliteDatabase sqlite, ICvarServices cvarServices, IPlayerClasses playerClasses, IPrecacheManager precacheManager, IRespawnServices respawnServices, IWeapons weapons, IGrenadeEffect grenadeEffect)
     {
         _playerManager = playerManager;
         _sharedSystem = sharedSystem;
@@ -53,10 +49,6 @@ public class Listeners : IListeners, IClientListener, IGameListener, IEntityList
         _entityManager = _sharedSystem.GetEntityManager();
         _weapons = weapons;
         _grenadeEffect = grenadeEffect;
-        _markerServices = markerServices;
-        _leaderServices = leaderServices;
-        _glowServices = glowServices;
-
     }
 
     public void Init()
@@ -64,8 +56,6 @@ public class Listeners : IListeners, IClientListener, IGameListener, IEntityList
         var clientManager = _sharedSystem.GetClientManager();
         clientManager.InstallClientListener(this);
         clientManager.InstallCommandListener("jointeam", OnJoinTeamCommand);
-        
-        clientManager.InstallCommandListener("player_ping", OnPlayerPing);
 
         _entityManager.InstallEntityListener(this);
         _entityManager.HookEntityInput("logic_relay", "Trigger");
@@ -79,7 +69,6 @@ public class Listeners : IListeners, IClientListener, IGameListener, IEntityList
         var clientManager = _sharedSystem.GetClientManager();
         clientManager.RemoveClientListener(this);
         clientManager.RemoveCommandListener("jointeam", OnJoinTeamCommand);
-        clientManager.RemoveCommandListener("player_ping", OnPlayerPing);
 
         _entityManager.RemoveEntityListener(this);
         _modsharp.RemoveGameListener(this);
@@ -167,31 +156,6 @@ public class Listeners : IListeners, IClientListener, IGameListener, IEntityList
             _modsharp.ServerCommand($"exec zombiemodsharp/{mapname}.cfg");
         }
     }
-    public void OnRoundRestarted()
-    {
-        _markerServices.CleanupAll();
-        _glowServices.CleanupAll();
-        _leaderServices.ReloadLeaderList(_sharedSystem);
-
-        foreach (var controller in _leaderServices.GetAllLeaders())
-        {
-            if (controller == null || !controller.IsValid()) continue;
-
-            var pawn = controller.GetPlayerPawn();
-            if (pawn == null || !pawn.IsValid()) continue;
-
-            var client = controller.GetGameClient();
-            if (client == null || !client.IsValid) continue;
-
-            _glowServices.CreateGlow(
-                client,
-                pawn,
-                new Color32(0, 255, 0, 255), // ºñ¦â Glow
-                5000,
-                IGlowServices.GlowVisibleMode.ExceptTarget
-            );
-        }
-    }
 
     private ECommandAction OnJoinTeamCommand(IGameClient client, StringCommand command)
     {
@@ -206,40 +170,6 @@ public class Listeners : IListeners, IClientListener, IGameListener, IEntityList
         }
 
         return ECommandAction.Skipped;
-    }
-
-    private ECommandAction OnPlayerPing(IGameClient client, StringCommand command)
-    {
-        if (!client.IsValid) return ECommandAction.Handled;
-        if (!_leaderServices.IsLeader(client.GetPlayerController())) return ECommandAction.Handled;
-
-        
-        var controller = client.GetPlayerController();
-        var pawn = controller?.GetPawn();
-        // get eye position and angles for place marker
-        if (pawn != null && pawn.IsAlive)
-        {
-            var eyePos = pawn.GetEyePosition();
-            var eyeAngles = pawn.GetEyeAngles();
-            var forward = eyeAngles.AnglesToVectorForward();
-            var endPos = eyePos + forward * 3000f;
-
-            var trace = _sharedSystem.GetPhysicsQueryManager().TraceLineNoPlayers(
-                eyePos,
-                endPos,
-                UsefulInteractionLayers.PlayerPing,
-                (CollisionGroupType)3,
-                TraceQueryFlag.All
-            );
-
-            var hitPos = trace.DidHit() ? trace.HitPoint : trace.EndPosition;
-            var placePos = hitPos + new Vector(0, 0, 1.0f);
-
-            _markerServices.CreateMarker(client, placePos);
-            
-        }
-
-        return ECommandAction.Stopped;
     }
 
     public EHookAction OnEntityAcceptInput(IBaseEntity entity, string input, in EntityVariant value, IBaseEntity? activator, IBaseEntity? caller)
