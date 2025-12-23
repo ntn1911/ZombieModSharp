@@ -11,9 +11,9 @@ namespace ZombieModSharp.Core.Modules;
 
 public class LeaderServices : ILeaderServices
 {
-    private static readonly List<IPlayerController> _leaders = new();
-    private static ISharedSystem? _sharedSystem;
-    private static ILogger<LeaderServices> _logger;
+    private readonly List<IPlayerController> _leaders = new();
+    private ISharedSystem? _sharedSystem;
+    private ILogger<LeaderServices> _logger;
     private readonly IGlowServices _glowMethod;
     private readonly IGameEventManager _gameEventManager;
 
