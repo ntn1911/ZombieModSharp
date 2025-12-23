@@ -39,6 +39,8 @@ public class Listeners : IListeners, IClientListener, IGameListener, IEntityList
     private readonly IGlowServices _glowServices;
     private readonly ILeaderServices _leaderServices;
 
+    private readonly debug_precache _particlePrecache;
+
     public Listeners(IPlayerManager playerManager, ISharedSystem sharedSystem, ISqliteDatabase sqlite, ICvarServices cvarServices, IPlayerClasses playerClasses, IPrecacheManager precacheManager, IRespawnServices respawnServices, IWeapons weapons, IGrenadeEffect grenadeEffect, IMarkerServices markerServices, ILeaderServices leaderServices, IGlowServices glowServices)
     {
         _playerManager = playerManager;
@@ -62,6 +64,7 @@ public class Listeners : IListeners, IClientListener, IGameListener, IEntityList
     public void Init()
     {
         var clientManager = _sharedSystem.GetClientManager();
+
         clientManager.InstallClientListener(this);
         clientManager.InstallCommandListener("jointeam", OnJoinTeamCommand);
         
@@ -152,8 +155,11 @@ public class Listeners : IListeners, IClientListener, IGameListener, IEntityList
     public void OnResourcePrecache()
     {
         // _logger.LogInformation("Precache GoldShip Here");
-        //_modsharp.PrecacheResource("characters/models/oylsister/uma_musume/gold_ship/goldship2.vmdl");
-        //_modsharp.PrecacheResource("characters/models/s2ze/zombie_frozen/zombie_frozen.vmdl");
+        // _modsharp.PrecacheResource("characters/models/s2ze/zombie_frozen/zombie_frozen.vmdl");
+        // _modsharp.PrecacheResource("particles/leader_a_1.vpcf");
+        // _modsharp.PrecacheResource("particles/leader_a_2.vpcf");
+        // ^^^ remember to precache a~d vcpf leader markers ^^^
+
         _precacheManager.PrecacheAllResource();
     }
 

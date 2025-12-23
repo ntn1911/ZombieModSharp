@@ -22,11 +22,13 @@ public class Infect : IInfect
     private readonly ICvarServices _cvarServices;
     private readonly ISoundServices _soundServices;
     private readonly IZTele _ztele;
+    private readonly ILeaderServices _leaderServices;
+    private readonly IGlowServices _glowServices;
 
     private bool InfectStarted = false;
     public static float CashMultiply = 1.0f;
 
-    public Infect(ISharedSystem sharedSystem, ILogger<Infect> logger, IPlayerManager player, IPlayerClasses playerClasses, ICvarServices cvarServices, ISoundServices soundServices, IZTele zTele)
+    public Infect(ISharedSystem sharedSystem, ILogger<Infect> logger, IPlayerManager player, IPlayerClasses playerClasses, ICvarServices cvarServices, ISoundServices soundServices, IZTele zTele, ILeaderServices leaderServices, IGlowServices glowServices)
     {
         _sharedSystem = sharedSystem;
         _entityManager = _sharedSystem.GetEntityManager();
@@ -38,6 +40,8 @@ public class Infect : IInfect
         _cvarServices = cvarServices;
         _soundServices = soundServices;
         _ztele = zTele;
+        _leaderServices = leaderServices;
+        _glowServices = glowServices;
     }
 
     public void InfectPlayer(IGameClient client, IGameClient? attacker = null, bool motherzombie = false, bool force = false)
@@ -61,6 +65,11 @@ public class Infect : IInfect
         {
             _logger.LogError("The client controller is null!");
             return;
+        }
+
+        if (_leaderServices.IsLeader(clientController))
+        {
+            _glowServices.DisablePlayerGlow(clientController);
         }
 
         clientController.SwitchTeam(CStrikeTeam.TE);
