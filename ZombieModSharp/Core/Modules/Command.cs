@@ -1,11 +1,14 @@
 using Sharp.Extensions.CommandManager;
 using Sharp.Shared;
+using Sharp.Shared.Definition;
 using Sharp.Shared.Enums;
 using Sharp.Shared.Managers;
 using Sharp.Shared.Objects;
 using Sharp.Shared.Types;
+using System.Runtime.InteropServices;
 using ZombieModSharp.Abstractions;
 using ZombieModSharp.Abstractions.Storage;
+using static ZombieModSharp.Abstractions.IGlowServices;
 
 namespace ZombieModSharp.Core.Modules;
 
@@ -20,8 +23,11 @@ public class Command : ICommand
     private readonly ISqliteDatabase _sqlite;
     private readonly ICvarServices _cvarServices;
     private readonly IGrenadeEffect _grenadeEffect;
+    private readonly ILeaderServices _leaderServices;
+    private readonly IGlowServices _glowServices;
+    private readonly IMarkerServices _markerServices;
 
-    public Command(IPlayerManager playerManager, IZTele ztele, IInfect infect, ISharedSystem sharedSystem, ICommandManager command, ISqliteDatabase sqlite, ICvarServices cvarServices, IGrenadeEffect grenadeEffect)
+    public Command(IPlayerManager playerManager, IZTele ztele, IInfect infect, ISharedSystem sharedSystem, ICommandManager command, ISqliteDatabase sqlite, ICvarServices cvarServices, IGrenadeEffect grenadeEffect, ILeaderServices leader, IGlowServices glowServices, IMarkerServices markerServices)
     {
         _playerManager = playerManager;
         _ztele = ztele;
@@ -32,6 +38,9 @@ public class Command : ICommand
         _sqlite = sqlite;
         _cvarServices = cvarServices;
         _grenadeEffect = grenadeEffect;
+        _leaderServices = leader;
+        _glowServices = glowServices;
+        _markerServices = markerServices;
     }
 
     public void PostInit()
@@ -43,6 +52,218 @@ public class Command : ICommand
         _command.RegisterAdminCommand("togglerespawn", ToggleRespawnCommand, "slay");
         _command.RegisterAdminCommand("burnme", BurnTestCommand, "slay");
         _command.RegisterAdminCommand("extragrenade", ExtraGrenadeTest, "slay");
+        _command.RegisterAdminCommand("jl", OnLeaderCommand, "slay");
+        _command.RegisterAdminCommand("ql", OnQuitLeaderCommand, "slay");
+        _command.RegisterAdminCommand("pm", OnMarkerCommand, "slay");
+        _command.RegisterAdminCommand("dm", OnDisableMarkerCommand, "slay");
+        _command.RegisterAdminCommand("glow", OnGlowCommand, "slay");
+        _command.RegisterAdminCommand("disglow", OnDisableGlowCommand, "slay");
+    }
+
+
+    public void OnGlowCommand(IGameClient client, StringCommand command)
+    {
+        if (!client.IsValid) return;
+
+        var arg = command.GetArg(1);
+        var target = GetTargets(client, arg).FirstOrDefault();
+
+        if (target == null || !target.IsValid)
+        {
+            ReplyToCommand(client, "Can't find any player");
+            return;
+        }
+
+        var controller = target.GetPlayerController();
+        if (controller == null || !controller.IsValid())
+        {
+            ReplyToCommand(client, "Can't find any player controller");
+            return;
+        }
+        var pawn = controller.GetPlayerPawn();
+
+        if (pawn == null)
+        {
+            ReplyToCommand(client, $"Entity {controller.PlayerName} have no Pawn�Acan't Glow");
+            return;
+        }
+
+        _glowServices.CreateGlow(target, pawn,
+            new Color32(255, 0, 0, 255), 13000, GlowVisibleMode.SameTeam);
+
+        ReplyToCommand(client, $"{controller.PlayerName} Glow.");
+        
+    }
+
+    public void OnDisableGlowCommand(IGameClient client, StringCommand command)
+    {
+        if (!client.IsValid)
+            return;
+
+        var arg = command.GetArg(1);
+        var target = GetTargets(client, arg).FirstOrDefault();
+
+        if (target == null || !target.IsValid)
+        {
+            ReplyToCommand(client, "Can't find any player");
+            return;
+        }
+        var controller = target.GetPlayerController();
+        if (controller == null || !controller.IsValid())
+        {
+            ReplyToCommand(client, "Can't find any player controller");
+            return;
+        }
+
+        _glowServices.DisablePlayerGlow(controller);
+        ReplyToCommand(client, $"Player {controller.PlayerName} disable glow!");
+        
+    }
+    private void OnMarkerCommand(IGameClient client, StringCommand command)
+    {
+        if (!client.IsValid) return;
+
+        var controller = client.GetPlayerController();
+        if (controller is null || !controller.IsValid()) return;
+
+        var pawn = controller.GetPawn();
+        if (pawn == null || !pawn.IsValid() || !pawn.IsAlive)
+        {
+            ReplyToCommand(client, "You need to be alive and valid to place marker!");
+            return;
+        }
+
+        const float maxDistance = 3000f;
+        var eyePos = pawn.GetEyePosition();
+        var eyeAngles = pawn.GetEyeAngles();
+        var forward = eyeAngles.AnglesToVectorForward();
+        var endPos = eyePos + forward * maxDistance;
+
+        var trace = _sharedSystem.GetPhysicsQueryManager().TraceLineNoPlayers(
+            eyePos,
+            endPos,
+            UsefulInteractionLayers.PlayerPing,
+            (CollisionGroupType)3,
+            TraceQueryFlag.All,
+            InteractionLayers.None
+        );
+
+        var hitPos = trace.DidHit() ? trace.HitPoint : trace.EndPosition;
+        var placePos = hitPos + new Vector(0, 0, 1.0f);
+
+        if (_markerServices.CreateMarker(client, placePos))
+            ReplyToCommand(client, "Placed the marker.");
+        else
+            ReplyToCommand(client, "Marker Placed failed.");
+    }
+
+    private void OnDisableMarkerCommand(IGameClient client, StringCommand command)
+    {
+        _markerServices.DisableLastMarker();
+        ReplyToCommand(client, "Your marker has been removed.");
+        return;
+    }
+
+
+    public void OnLeaderCommand(IGameClient client, StringCommand command)
+    {
+        if (command.ArgCount < 1)
+        {
+            ReplyToCommand(client, "Usage: ms_leader <target>");
+            return;
+        }
+
+        var arg = command.GetArg(1);
+        var target = GetTargets(client, arg).FirstOrDefault();
+        
+        if (target == null || !target.IsValid)
+        {
+            ReplyToCommand(client,"Can't find any player");
+            return;
+        }
+
+        var target_controller = target.GetPlayerController();
+        if (target_controller == null || !target_controller.IsValid())
+        {
+            ReplyToCommand(client,"Can't find any player controller");
+            return;
+        }
+
+        if (_leaderServices.IsLeader(target_controller))
+        {
+            ReplyToCommand(client,$"{target.Name} is already a leader.");
+            return;
+        }
+
+        if (_leaderServices.AssignLeader(target_controller))
+        {
+            ReplyToCommand(client,$"{target_controller.GetGameClient()?.Name} is leader now.");
+
+            target_controller.SetClanTag(" [Leader]  ");
+            _leaderServices.UpdateClientClanTags();
+            var pawn = target_controller.GetPlayerPawn();
+            if (pawn != null && pawn.IsValid())
+            {
+                var mode = IGlowServices.GlowVisibleMode.ExceptTarget;
+                _glowServices.CreateGlow(
+                    target_controller.GetGameClient()!,
+                    pawn,
+                    new Color32(0, 255, 0, 255),
+                    5000,
+                    mode
+                );
+            }
+        }
+        else
+        {
+            ReplyToCommand(client,$"Failed to assign leader to {target_controller.PlayerName}");
+        }
+        
+    }
+
+    public void OnQuitLeaderCommand(IGameClient client, StringCommand command)
+    {
+        if (command.ArgCount < 1)
+        {
+            ReplyToCommand(client, "Usage: ms_leader <target>");
+            return;
+        }
+
+        var arg = command.GetArg(1);
+        var target = GetTargets(client, arg).FirstOrDefault();
+
+        if (target == null || !target.IsValid)
+        {
+            ReplyToCommand(client, "Can't find any player");
+            return;
+        }
+
+        var target_controller = target.GetPlayerController();
+        if (target_controller == null || !target_controller.IsValid())
+        {
+            ReplyToCommand(client, "Can't find any player controller");
+            return;
+        }
+
+        if (!_leaderServices.IsLeader(target_controller))
+        {
+            ReplyToCommand(client, $"{target_controller.PlayerName} is not a leader.");
+            return;
+        }
+
+        if (_leaderServices.RemoveLeader(target_controller))
+        {
+            target_controller.SetClanTag("");
+            _leaderServices.UpdateClientClanTags();
+            ReplyToCommand(client, $"{target_controller.PlayerName} has quit being a leader.");
+            _glowServices.DisablePlayerGlow(target_controller);
+        }
+        else
+        {
+            ReplyToCommand(client, $"Failed to quit leader for {target_controller.PlayerName}");
+        }
+
+        
     }
 
     private void ZTeleCommand(IGameClient client, StringCommand command)
