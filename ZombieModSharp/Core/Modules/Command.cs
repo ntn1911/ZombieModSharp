@@ -84,14 +84,14 @@ public class Command : ICommand
 
         if (pawn == null)
         {
-            ReplyToCommand(client, $"Entity {controller.PlayerName} have no Pawn¡Acan't Glow");
+            ReplyToCommand(client, $"Entity {controller.PlayerName} have no Pawnï¿½Acan't Glow");
             return;
         }
 
         _glowServices.CreateGlow(target, pawn,
             new Color32(255, 0, 0, 255), 13000, GlowVisibleMode.SameTeam);
 
-        ReplyToCommand(client, $"{controller.PlayerName} Glow¡I");
+        ReplyToCommand(client, $"{controller.PlayerName} Glow.");
         
     }
 
@@ -129,7 +129,7 @@ public class Command : ICommand
         var pawn = controller.GetPawn();
         if (pawn == null || !pawn.IsValid() || !pawn.IsAlive)
         {
-            controller.Print(HudPrintChannel.Chat, "You need to be alive and valid to place marker!");
+            ReplyToCommand(client, "You need to be alive and valid to place marker!");
             return;
         }
 
@@ -152,16 +152,13 @@ public class Command : ICommand
         var placePos = hitPos + new Vector(0, 0, 1.0f);
 
         if (_markerServices.CreateMarker(client, placePos))
-            ReplyToCommand(client, "Placed the marker¡I");
+            ReplyToCommand(client, "Placed the marker.");
         else
-            ReplyToCommand(client, "Marker Placed failed¡I");
-
-        
+            ReplyToCommand(client, "Marker Placed failed.");
     }
 
     private void OnDisableMarkerCommand(IGameClient client, StringCommand command)
     {
-
         _markerServices.DisableLastMarker();
         ReplyToCommand(client, "Your marker has been removed.");
         return;
@@ -194,13 +191,13 @@ public class Command : ICommand
 
         if (_leaderServices.IsLeader(target_controller))
         {
-            ReplyToCommand(client,$"{target.Name} is already a leader¡I");
+            ReplyToCommand(client,$"{target.Name} is already a leader.");
             return;
         }
 
         if (_leaderServices.AssignLeader(target_controller))
         {
-            ReplyToCommand(client,$"{target_controller.GetGameClient()?.Name} is leader now¡I");
+            ReplyToCommand(client,$"{target_controller.GetGameClient()?.Name} is leader now.");
 
             target_controller.SetClanTag(" [Leader]  ");
             _leaderServices.UpdateClientClanTags();
@@ -250,7 +247,7 @@ public class Command : ICommand
 
         if (!_leaderServices.IsLeader(target_controller))
         {
-            ReplyToCommand(client, $"{target_controller.PlayerName} is not a leader¡I");
+            ReplyToCommand(client, $"{target_controller.PlayerName} is not a leader.");
             return;
         }
 
@@ -258,7 +255,7 @@ public class Command : ICommand
         {
             target_controller.SetClanTag("");
             _leaderServices.UpdateClientClanTags();
-            ReplyToCommand(client, $"{target_controller.PlayerName} has quit being a leader¡I");
+            ReplyToCommand(client, $"{target_controller.PlayerName} has quit being a leader.");
             _glowServices.DisablePlayerGlow(target_controller);
         }
         else
