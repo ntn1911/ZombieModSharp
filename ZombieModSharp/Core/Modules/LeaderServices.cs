@@ -27,7 +27,7 @@ public class LeaderServices : ILeaderServices
 
     public bool AssignLeader(IPlayerController controller)
     {
-        if (controller == null || !controller.IsValid())
+        if (!controller.IsValid())
             return false;
 
         if (!_leaders.Contains(controller))
