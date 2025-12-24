@@ -70,28 +70,9 @@ public class Events : IEvents
         _gameEventManager.ListenEvent("round_freeze_end", OnRoundFreezeEnd);
         _gameEventManager.ListenEvent("warmup_end", OnWarmupEnd);
         _gameEventManager.ListenEvent("weapon_fire", OnWeaponFired);
-        _gameEventManager.HookEvent("player_death", OnPlayerDeath);
     }
 
-    private HookReturnValue<bool> OnPlayerDeath(IGameEvent e, ref bool serverOnly)
-    {
-        if (e is not IEventPlayerDeath deathEvent)
-            return new HookReturnValue<bool>();
-
-        var victim = deathEvent.VictimController;
-        if (victim != null && victim.IsValid())
-        {
-            // 如果是 Leader，死亡時關閉 Glow
-            if (_LeaderServices.IsLeader(victim))
-            {
-                _glowServices.DisablePlayerGlow(victim);
-            }
-        }
-
-        // 原始事件只給伺服器，不給客戶端
-        serverOnly = true;
-        return new HookReturnValue<bool>();
-    }
+   
 
     private void OnPlayerHurt(IGameEvent e)
     {
@@ -152,6 +133,7 @@ public class Events : IEvents
     private void OnPlayerDeath(IGameEvent e)
     {
         //_infect.CheckGameStatus();
+
         var client = e.GetPlayerController("userid")?.GetGameClient();
         var controller = e.GetPlayerController("userid");
 

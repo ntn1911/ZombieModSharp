@@ -39,8 +39,6 @@ public class Listeners : IListeners, IClientListener, IGameListener, IEntityList
     private readonly IGlowServices _glowServices;
     private readonly ILeaderServices _leaderServices;
 
-    private readonly debug_precache _particlePrecache;
-
     public Listeners(IPlayerManager playerManager, ISharedSystem sharedSystem, ISqliteDatabase sqlite, ICvarServices cvarServices, IPlayerClasses playerClasses, IPrecacheManager precacheManager, IRespawnServices respawnServices, IWeapons weapons, IGrenadeEffect grenadeEffect, IMarkerServices markerServices, ILeaderServices leaderServices, IGlowServices glowServices)
     {
         _playerManager = playerManager;
