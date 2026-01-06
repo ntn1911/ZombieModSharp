@@ -68,27 +68,6 @@ public class Events : IEvents
         _gameEventManager.ListenEvent("round_freeze_end", OnRoundFreezeEnd);
         _gameEventManager.ListenEvent("warmup_end", OnWarmupEnd);
         _gameEventManager.ListenEvent("weapon_fire", OnWeaponFired);
-        _gameEventManager.HookEvent("player_death", OnPlayerDeath);
-    }
-
-    private HookReturnValue<bool> OnPlayerDeath(IGameEvent e, ref bool serverOnly)
-    {
-        if (e is not IEventPlayerDeath deathEvent)
-            return new HookReturnValue<bool>();
-
-        var victim = deathEvent.VictimController;
-        if (victim != null && victim.IsValid())
-        {
-            // �p�G�O Leader�A���`������ Glow
-            if (_LeaderServices.IsLeader(victim))
-            {
-                _glowServices.DisablePlayerGlow(victim);
-            }
-        }
-
-        // ��l�ƥ�u�����A���A�����Ȥ��
-        serverOnly = true;
-        return new HookReturnValue<bool>();
     }
 
     private void OnPlayerHurt(IGameEvent e)
@@ -149,11 +128,21 @@ public class Events : IEvents
     private void OnPlayerDeath(IGameEvent e)
     {
         //_infect.CheckGameStatus();
+
         var client = e.GetPlayerController("userid")?.GetGameClient();
         var controller = e.GetPlayerController("userid");
 
         if(client == null)
             return;
+
+        if (controller != null && controller.IsValid())
+        {
+            // �p�G�O Leader�A���`������ Glow
+            if (_LeaderServices.IsLeader(controller))
+            {
+                _glowServices.DisablePlayerGlow(controller);
+            }
+        }
 
         if(_playerManager.GetOrCreatePlayer(client).IsInfected())
         {
