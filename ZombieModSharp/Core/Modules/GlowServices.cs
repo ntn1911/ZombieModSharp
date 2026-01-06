@@ -189,32 +189,6 @@ public class GlowServices : IGlowServices
         var modelState = skeleton?.GetModelState();
         return modelState?.ModelName;
     }
-
-    private IPlayerController? FindTargetPlayer(StringCommand command, IGameClient self)
-    {
-        if (command.ArgCount == 0)
-            return self.GetPlayerController();
-
-        var nameArg = command.GetArg(1).Trim();
-        var players = _sharedSystem.GetEntityManager().FindPlayerControllers();
-
-        var exact = players.FirstOrDefault(p =>
-            p.IsValid() &&
-            p.IsConnected() &&
-            !string.IsNullOrEmpty(p.GetGameClient()!.Name) &&
-            p.GetGameClient()!.Name.Equals(nameArg, StringComparison.OrdinalIgnoreCase));
-
-        if (exact != null)
-            return exact;
-
-        var partial = players.FirstOrDefault(p =>
-            p.IsValid() &&
-            p.IsConnected() &&
-            !string.IsNullOrEmpty(p.GetGameClient()!.Name) &&
-            p.GetGameClient()!.Name.Contains(nameArg, StringComparison.OrdinalIgnoreCase));
-
-        return partial;
-    }
 }
 
 
