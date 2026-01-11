@@ -21,4 +21,8 @@
     </PackageReference>
     <PackageReference Include="ModSharp.Sharp.Shared" Version="*" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ZombieModSharp.Shared\ZombieModSharp.Shared.csproj" />
+  </ItemGroup>
 </Project>
