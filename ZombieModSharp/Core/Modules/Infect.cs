@@ -67,7 +67,7 @@ public class Infect : IInfect
             return;
         }
 
-        if (_leaderServices.IsLeader(clientController))
+        if (_leaderServices.IsClientLeader(clientController))
         {
             _glowServices.DisablePlayerGlow(clientController);
         }

@@ -189,7 +189,7 @@ public class Command : ICommand
             return;
         }
 
-        if (_leaderServices.IsLeader(target_controller))
+        if (_leaderServices.IsClientLeader(target_controller))
         {
             ReplyToCommand(client,$"{target.Name} is already a leader.");
             return;
@@ -245,7 +245,7 @@ public class Command : ICommand
             return;
         }
 
-        if (!_leaderServices.IsLeader(target_controller))
+        if (!_leaderServices.IsClientLeader(target_controller))
         {
             ReplyToCommand(client, $"{target_controller.PlayerName} is not a leader.");
             return;

@@ -32,6 +32,7 @@ public sealed class ZombieModSharp : IModSharpModule
     private readonly ISqliteDatabase _sqliteDatabase;
     private readonly ICvarServices _cvarServices;
     private readonly IInfect _infect;
+    private readonly ILeaderServices _leaderServices;
     private readonly ISharpModuleManager  _modules;
 
     public static string Prefix { get; } = " \x04[Z:MS]\x01";
@@ -88,6 +89,7 @@ public sealed class ZombieModSharp : IModSharpModule
         _configs = _serviceProvider.GetRequiredService<IConfigs>();
         _cvarServices = _serviceProvider.GetRequiredService<ICvarServices>();
         _infect = _serviceProvider.GetRequiredService<IInfect>();
+        _leaderServices = _serviceProvider.GetRequiredService<ILeaderServices>();
     }
 
     public bool Init()
@@ -131,6 +133,7 @@ public sealed class ZombieModSharp : IModSharpModule
         // _eventListener.RegisterEvents();
         _command.PostInit();
         _modules.RegisterSharpModuleInterface<IInfectShared>(this, IInfectShared.Identity, _infect);
+        _modules.RegisterSharpModuleInterface<ILeaderShared>(this, ILeaderShared.Identity, _leaderServices);
     }
 
     public void OnAllModulesLoaded()

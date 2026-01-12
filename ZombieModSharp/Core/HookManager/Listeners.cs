@@ -219,7 +219,7 @@ public class Listeners : IListeners, IClientListener, IGameListener, IEntityList
     private ECommandAction OnPlayerPing(IGameClient client, StringCommand command)
     {
         if (!client.IsValid) return ECommandAction.Handled;
-        if (!_leaderServices.IsLeader(client.GetPlayerController())) return ECommandAction.Handled;
+        if (!_leaderServices.IsClientLeader(client.GetPlayerController())) return ECommandAction.Handled;
 
         
         var controller = client.GetPlayerController();

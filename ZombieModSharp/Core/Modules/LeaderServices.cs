@@ -6,6 +6,7 @@ using Sharp.Shared.GameEntities;
 using Sharp.Shared.Objects;
 using Sharp.Shared.Types;
 using ZombieModSharp.Abstractions;
+using ZombieModSharp.Shared;
 
 namespace ZombieModSharp.Core.Modules;
 
@@ -54,7 +55,7 @@ public class LeaderServices : ILeaderServices
     }
 
     
-    public bool IsLeader(IPlayerController? controller)
+    public bool IsClientLeader(IPlayerController? controller)
     {
         if (controller == null || !controller.IsValid())
             return false;

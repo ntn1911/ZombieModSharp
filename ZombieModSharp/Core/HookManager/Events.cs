@@ -138,7 +138,7 @@ public class Events : IEvents
         if (controller != null && controller.IsValid())
         {
             // �p�G�O Leader�A���`������ Glow
-            if (_LeaderServices.IsLeader(controller))
+            if (_LeaderServices.IsClientLeader(controller))
             {
                 _glowServices.DisablePlayerGlow(controller);
             }
