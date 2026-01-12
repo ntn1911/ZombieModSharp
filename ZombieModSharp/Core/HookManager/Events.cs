@@ -27,13 +27,15 @@ public class Events : IEvents
     private readonly ICvarServices _cvarServices;
     private readonly ISoundServices _soundServices;
     private readonly IRespawnServices _respawnServices;
+    private readonly IGlowServices _glowServices;
+    private readonly ILeaderServices _LeaderServices;
 
     public int ListenerVersion => IEventListener.ApiVersion;
     public int ListenerPriority => 0;
 
     public bool RoundEnded { get; private set; } = false;
 
-    public Events(ISharedSystem sharedSystem, IGameEventManager gameEventManager, ILogger<Events> logger, IPlayerManager playerManager, IInfect infect, IZTele ztele, IKnockback knockback, ICvarServices cvarServices, ISoundServices soundServices, IRespawnServices respawnServices)
+    public Events(ISharedSystem sharedSystem, IGameEventManager gameEventManager, ILogger<Events> logger, IPlayerManager playerManager, IInfect infect, IZTele ztele, IKnockback knockback, ICvarServices cvarServices, ISoundServices soundServices, IRespawnServices respawnServices, IGlowServices glowMethod, ILeaderServices leaderServices)
     {
         _sharedSystem = sharedSystem;
         _gameEventManager = gameEventManager;
@@ -46,6 +48,8 @@ public class Events : IEvents
         _cvarServices = cvarServices;
         _soundServices = soundServices;
         _respawnServices = respawnServices;
+        _glowServices = glowMethod;
+        _LeaderServices = leaderServices;
     }
 
     public void Init()
@@ -124,11 +128,21 @@ public class Events : IEvents
     private void OnPlayerDeath(IGameEvent e)
     {
         //_infect.CheckGameStatus();
+
         var client = e.GetPlayerController("userid")?.GetGameClient();
         var controller = e.GetPlayerController("userid");
 
         if(client == null)
             return;
+
+        if (controller != null && controller.IsValid())
+        {
+            // �p�G�O Leader�A���`������ Glow
+            if (_LeaderServices.IsLeader(controller))
+            {
+                _glowServices.DisablePlayerGlow(controller);
+            }
+        }
 
         if(_playerManager.GetOrCreatePlayer(client).IsInfected())
         {

@@ -53,6 +53,7 @@ public class MarkerServices: IMarkerServices
         _transmitManager.AddEntityHooks(particle, defaultTransmit: true);
 
         // Delete oldest marker if exceeding limit
+
         if (_markers.Count >= MaxMarkers)
         {
             var oldest = _markers[0];

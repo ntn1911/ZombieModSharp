@@ -62,6 +62,7 @@ public class Listeners : IListeners, IClientListener, IGameListener, IEntityList
     public void Init()
     {
         var clientManager = _sharedSystem.GetClientManager();
+
         clientManager.InstallClientListener(this);
         clientManager.InstallCommandListener("jointeam", OnJoinTeamCommand);
         
@@ -152,8 +153,11 @@ public class Listeners : IListeners, IClientListener, IGameListener, IEntityList
     public void OnResourcePrecache()
     {
         // _logger.LogInformation("Precache GoldShip Here");
-        //_modsharp.PrecacheResource("characters/models/oylsister/uma_musume/gold_ship/goldship2.vmdl");
-        //_modsharp.PrecacheResource("characters/models/s2ze/zombie_frozen/zombie_frozen.vmdl");
+        // _modsharp.PrecacheResource("characters/models/s2ze/zombie_frozen/zombie_frozen.vmdl");
+        // _modsharp.PrecacheResource("particles/leader_a_1.vpcf");
+        // _modsharp.PrecacheResource("particles/leader_a_2.vpcf");
+        // ^^^ remember to precache a~d vcpf leader markers ^^^
+
         _precacheManager.PrecacheAllResource();
     }
 
@@ -173,24 +177,28 @@ public class Listeners : IListeners, IClientListener, IGameListener, IEntityList
         _glowServices.CleanupAll();
         _leaderServices.ReloadLeaderList(_sharedSystem);
 
-        foreach (var controller in _leaderServices.GetAllLeaders())
-        {
-            if (controller == null || !controller.IsValid()) continue;
+        _modsharp.PushTimer(() => {
+            var leaders = _leaderServices.GetAllLeaders();
 
-            var pawn = controller.GetPlayerPawn();
-            if (pawn == null || !pawn.IsValid()) continue;
+            foreach (var controller in leaders)
+            {
+                if (controller == null || !controller.IsValid()) continue;
 
-            var client = controller.GetGameClient();
-            if (client == null || !client.IsValid) continue;
+                var pawn = controller.GetPlayerPawn();
+                if (pawn == null || !pawn.IsValid()) continue;
 
-            _glowServices.CreateGlow(
-                client,
-                pawn,
-                new Color32(0, 255, 0, 255), // ºñ¦â Glow
-                5000,
-                IGlowServices.GlowVisibleMode.ExceptTarget
-            );
-        }
+                var client = controller.GetGameClient();
+                if (client == null || !client.IsValid) continue;
+
+                _glowServices.CreateGlow(
+                    client,
+                    pawn,
+                    new Color32(0, 255, 0, 255), // ï¿½ï¿½ï¿½ Glow
+                    5000,
+                    IGlowServices.GlowVisibleMode.ExceptTarget
+                );
+            }
+        }, 0.7f, GameTimerFlags.StopOnMapEnd);
     }
 
     private ECommandAction OnJoinTeamCommand(IGameClient client, StringCommand command)
