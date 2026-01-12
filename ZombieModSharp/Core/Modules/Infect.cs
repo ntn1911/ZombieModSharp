@@ -450,6 +450,16 @@ public class Infect : IInfect
         }
     }
 
+    public bool IsClientInfect(IGameClient client)
+    {
+        return _player.GetOrCreatePlayer(client).IsInfected();
+    }
+
+    public bool IsClientHuman(IGameClient client)
+    {
+        return _player.GetOrCreatePlayer(client).IsHuman();
+    }
+
     public bool IsInfectStarted()
     {
         return InfectStarted;

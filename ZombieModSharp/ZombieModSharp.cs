@@ -6,9 +6,11 @@ using Sharp.Extensions.CommandManager;
 using Sharp.Extensions.GameEventManager;
 using Sharp.Shared;
 using Sharp.Shared.Abstractions;
+using Sharp.Shared.Managers;
 using ZombieModSharp.Abstractions;
 using ZombieModSharp.Abstractions.Storage;
 using ZombieModSharp.Core.Services;
+using ZombieModSharp.Shared;
 using ZombieModSharp.Storage;
 
 namespace ZombieModSharp;
@@ -29,6 +31,8 @@ public sealed class ZombieModSharp : IModSharpModule
     private readonly IConfigs _configs;
     private readonly ISqliteDatabase _sqliteDatabase;
     private readonly ICvarServices _cvarServices;
+    private readonly IInfect _infect;
+    private readonly ISharpModuleManager  _modules;
 
     public static string Prefix { get; } = " \x04[Z:MS]\x01";
 
@@ -45,6 +49,7 @@ public sealed class ZombieModSharp : IModSharpModule
         //ArgumentNullException.ThrowIfNull(coreConfiguration);
 
         _sharedSystem = sharedSystem ?? throw new ArgumentNullException(nameof(sharedSystem));
+        _modules = _sharedSystem.GetSharpModuleManager();
         // var configuration = new ConfigurationBuilder().AddJsonFile(Path.Combine(dllPath, "appsettings.json"), false, false).Build();
 
         var services = new ServiceCollection();
@@ -82,6 +87,7 @@ public sealed class ZombieModSharp : IModSharpModule
         _hooks = _serviceProvider.GetRequiredService<IHooks>();
         _configs = _serviceProvider.GetRequiredService<IConfigs>();
         _cvarServices = _serviceProvider.GetRequiredService<ICvarServices>();
+        _infect = _serviceProvider.GetRequiredService<IInfect>();
     }
 
     public bool Init()
@@ -124,6 +130,7 @@ public sealed class ZombieModSharp : IModSharpModule
         // _logger.LogInformation("Why don't you stay and play for a while?");
         // _eventListener.RegisterEvents();
         _command.PostInit();
+        _modules.RegisterSharpModuleInterface<IInfectShared>(this, IInfectShared.Identity, _infect);
     }
 
     public void OnAllModulesLoaded()
