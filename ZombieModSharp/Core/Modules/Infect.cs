@@ -7,6 +7,7 @@ using ZombieModSharp.Abstractions;
 using Sharp.Shared;
 using ZombieModSharp.Abstractions.Entities;
 using Sharp.Shared.Types;
+using ZombieModSharp.Shared;
 
 namespace ZombieModSharp.Core.Modules;
 
@@ -28,6 +29,8 @@ public class Infect : IInfect
     private bool InfectStarted = false;
     public static float CashMultiply = 1.0f;
 
+    public event DelegateInfectPlayer? OnClientInfect;
+
     public Infect(ISharedSystem sharedSystem, ILogger<Infect> logger, IPlayerManager player, IPlayerClasses playerClasses, ICvarServices cvarServices, ISoundServices soundServices, IZTele zTele, ILeaderServices leaderServices, IGlowServices glowServices)
     {
         _sharedSystem = sharedSystem;
@@ -47,6 +50,13 @@ public class Infect : IInfect
     public void InfectPlayer(IGameClient client, IGameClient? attacker = null, bool motherzombie = false, bool force = false)
     {
         if (client == null)
+        {
+            return;
+        }
+
+        var result = ZMS_OnClientInfect(client, attacker, motherzombie, force);
+
+        if(result == EHookAction.SkipCallReturnOverride)
         {
             return;
         }
@@ -458,6 +468,11 @@ public class Infect : IInfect
     public bool IsClientHuman(IGameClient client)
     {
         return _player.GetOrCreatePlayer(client).IsHuman();
+    }
+
+    public EHookAction? ZMS_OnClientInfect(IGameClient client, IGameClient? attacker = null, bool motherzombie = false, bool force = false)
+    {
+        return OnClientInfect?.Invoke(client, attacker, motherzombie, force);
     }
 
     public bool IsInfectStarted()
