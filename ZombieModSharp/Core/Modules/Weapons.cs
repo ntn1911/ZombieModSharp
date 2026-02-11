@@ -98,7 +98,7 @@ public class Weapons : IWeapons
             foreach(var command in weapon.Value.Command)
             {
                 _commandManager.RegisterClientCommand(command, OnPurchaseWeaponCommand);
-                _logger.LogInformation("Assigned Command {command}", command);
+                //_logger.LogInformation("Assigned Command {command}", command);
             }
         }
     }

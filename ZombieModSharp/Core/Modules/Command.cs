@@ -53,6 +53,8 @@ public class Command : ICommand
         _command.RegisterAdminCommand("burnme", BurnTestCommand, "slay");
         _command.RegisterAdminCommand("extragrenade", ExtraGrenadeTest, "slay");
         _command.RegisterAdminCommand("jl", OnLeaderCommand, "slay");
+        _command.RegisterAdminCommand("setleader", OnLeaderCommand, "slay");
+        _command.RegisterAdminCommand("leader", OnLeaderCommand, "slay");
         _command.RegisterAdminCommand("ql", OnQuitLeaderCommand, "slay");
         _command.RegisterAdminCommand("pm", OnMarkerCommand, "slay");
         _command.RegisterAdminCommand("dm", OnDisableMarkerCommand, "slay");
