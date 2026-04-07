@@ -20,6 +20,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="ModSharp.Sharp.Shared" Version="*" />
+    <PackageReference Include="Sharp.Modules.AdminManager.Shared" Version="2.1.117" />
   </ItemGroup>
 
   <ItemGroup>

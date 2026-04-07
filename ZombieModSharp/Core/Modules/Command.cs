@@ -1,4 +1,5 @@
 using Sharp.Extensions.CommandManager;
+using Sharp.Modules.AdminManager.Shared;
 using Sharp.Shared;
 using Sharp.Shared.Definition;
 using Sharp.Shared.Enums;
@@ -27,6 +28,8 @@ public class Command : ICommand
     private readonly IGlowServices _glowServices;
     private readonly IMarkerServices _markerServices;
 
+    private IAdminCommandRegistry? _adminManager;
+
     public Command(IPlayerManager playerManager, IZTele ztele, IInfect infect, ISharedSystem sharedSystem, ICommandManager command, ISqliteDatabase sqlite, ICvarServices cvarServices, IGrenadeEffect grenadeEffect, ILeaderServices leader, IGlowServices glowServices, IMarkerServices markerServices)
     {
         _playerManager = playerManager;
@@ -43,29 +46,38 @@ public class Command : ICommand
         _markerServices = markerServices;
     }
 
+    public void GetAdminManager(IModSharpModuleInterface<IAdminManager>? adminManager)
+    {
+        _adminManager = adminManager?.Instance?.GetCommandRegistry("ZombieModSharp");
+    }
+
     public void PostInit()
     {
         _command.RegisterClientCommand("ztele", ZTeleCommand);
-        _command.RegisterAdminCommand("infect", InfectCommand, "slay");
-        _command.RegisterAdminCommand("human", HumanizeCommand, "slay");
         _command.RegisterClientCommand("zsound", ZSoundCommand);
-        _command.RegisterAdminCommand("togglerespawn", ToggleRespawnCommand, "slay");
-        _command.RegisterAdminCommand("burnme", BurnTestCommand, "slay");
-        _command.RegisterAdminCommand("extragrenade", ExtraGrenadeTest, "slay");
-        _command.RegisterAdminCommand("jl", OnLeaderCommand, "slay");
-        _command.RegisterAdminCommand("setleader", OnLeaderCommand, "slay");
-        _command.RegisterAdminCommand("leader", OnLeaderCommand, "slay");
-        _command.RegisterAdminCommand("ql", OnQuitLeaderCommand, "slay");
-        _command.RegisterAdminCommand("pm", OnMarkerCommand, "slay");
-        _command.RegisterAdminCommand("dm", OnDisableMarkerCommand, "slay");
-        _command.RegisterAdminCommand("glow", OnGlowCommand, "slay");
-        _command.RegisterAdminCommand("disglow", OnDisableGlowCommand, "slay");
+    }
+
+    public void RegisterAdminCommand()
+    {
+        _adminManager?.RegisterAdminCommand("infect", InfectCommand, ["admin:slay"]);
+        _adminManager?.RegisterAdminCommand("human", HumanizeCommand, ["admin:slay"]);
+        _adminManager?.RegisterAdminCommand("togglerespawn", ToggleRespawnCommand, ["admin:slay"]);
+        _adminManager?.RegisterAdminCommand("burnme", BurnTestCommand, ["admin:slay"]);
+        _adminManager?.RegisterAdminCommand("extragrenade", ExtraGrenadeTest, ["admin:slay"]);
+        _adminManager?.RegisterAdminCommand("jl", OnLeaderCommand, ["admin:slay"]);
+        _adminManager?.RegisterAdminCommand("setleader", OnLeaderCommand, ["admin:slay"]);
+        _adminManager?.RegisterAdminCommand("leader", OnLeaderCommand, ["admin:slay"]);
+        _adminManager?.RegisterAdminCommand("ql", OnQuitLeaderCommand, ["admin:slay"]);
+        _adminManager?.RegisterAdminCommand("pm", OnMarkerCommand, ["admin:slay"]);
+        _adminManager?.RegisterAdminCommand("dm", OnDisableMarkerCommand, ["admin:slay"]);
+        _adminManager?.RegisterAdminCommand("glow", OnGlowCommand, ["admin:slay"]);
+        _adminManager?.RegisterAdminCommand("disglow", OnDisableGlowCommand, ["admin:slay"]);
     }
 
 
-    public void OnGlowCommand(IGameClient client, StringCommand command)
+    public void OnGlowCommand(IGameClient? client, StringCommand command)
     {
-        if (!client.IsValid) return;
+        if (client == null || !client.IsValid) return;
 
         var arg = command.GetArg(1);
         var target = GetTargets(client, arg).FirstOrDefault();
@@ -97,9 +109,9 @@ public class Command : ICommand
         
     }
 
-    public void OnDisableGlowCommand(IGameClient client, StringCommand command)
+    public void OnDisableGlowCommand(IGameClient? client, StringCommand command)
     {
-        if (!client.IsValid)
+        if (client == null || !client.IsValid)
             return;
 
         var arg = command.GetArg(1);
@@ -121,9 +133,9 @@ public class Command : ICommand
         ReplyToCommand(client, $"Player {controller.PlayerName} disable glow!");
         
     }
-    private void OnMarkerCommand(IGameClient client, StringCommand command)
+    private void OnMarkerCommand(IGameClient? client, StringCommand command)
     {
-        if (!client.IsValid) return;
+        if (client == null || !client.IsValid) return;
 
         var controller = client.GetPlayerController();
         if (controller is null || !controller.IsValid()) return;
@@ -159,7 +171,7 @@ public class Command : ICommand
             ReplyToCommand(client, "Marker Placed failed.");
     }
 
-    private void OnDisableMarkerCommand(IGameClient client, StringCommand command)
+    private void OnDisableMarkerCommand(IGameClient? client, StringCommand command)
     {
         _markerServices.DisableLastMarker();
         ReplyToCommand(client, "Your marker has been removed.");
@@ -167,7 +179,7 @@ public class Command : ICommand
     }
 
 
-    public void OnLeaderCommand(IGameClient client, StringCommand command)
+    public void OnLeaderCommand(IGameClient? client, StringCommand command)
     {
         if (command.ArgCount < 1)
         {
@@ -223,7 +235,7 @@ public class Command : ICommand
         
     }
 
-    public void OnQuitLeaderCommand(IGameClient client, StringCommand command)
+    public void OnQuitLeaderCommand(IGameClient? client, StringCommand command)
     {
         if (command.ArgCount < 1)
         {
@@ -302,7 +314,7 @@ public class Command : ICommand
         return;
     }
 
-    private void InfectCommand(IGameClient client, StringCommand command)
+    private void InfectCommand(IGameClient? client, StringCommand command)
     {
         if (command.ArgCount < 1)
         {
@@ -330,13 +342,13 @@ public class Command : ICommand
         foreach (var player in target)
         {
             _infect.InfectPlayer(player, null, motherzombie, true);
-            _modsharp.PrintChannelAll(HudPrintChannel.Chat, $"{ZombieModSharp.Prefix} Admin {client.Name} has infected {player.Name} via command");
+            _modsharp.PrintChannelAll(HudPrintChannel.Chat, $"{ZombieModSharp.Prefix} Admin {client?.Name} has infected {player.Name} via command");
         }
 
         return;
     }
 
-    private void HumanizeCommand(IGameClient client, StringCommand command)
+    private void HumanizeCommand(IGameClient? client, StringCommand command)
     {
         if (command.ArgCount < 1)
         {
@@ -356,7 +368,7 @@ public class Command : ICommand
         foreach (var player in target)
         {
             _infect.HumanizeClient(player, true);
-            _modsharp.PrintChannelAll(HudPrintChannel.Chat, $"{ZombieModSharp.Prefix} Admin {client.Name} has revived {player.Name} via command");
+            _modsharp.PrintChannelAll(HudPrintChannel.Chat, $"{ZombieModSharp.Prefix} Admin {client?.Name} has revived {player.Name} via command");
         }
 
         return;
@@ -400,7 +412,7 @@ public class Command : ICommand
         });
     }
 
-    private void ToggleRespawnCommand(IGameClient client, StringCommand command)
+    private void ToggleRespawnCommand(IGameClient? client, StringCommand command)
     {
         if(command.ArgCount < 1)
         {
@@ -427,15 +439,15 @@ public class Command : ICommand
         _modsharp.PrintToChatAll($"{ZombieModSharp.Prefix} Respawn has been{(Convert.ToBoolean(arg) ? "\x05 Enabled" : "\x07 Disabled")}");
     }
 
-    private void BurnTestCommand(IGameClient client, StringCommand command)
+    private void BurnTestCommand(IGameClient? client, StringCommand command)
     {
-        var player = client.GetPlayerController()?.GetPlayerPawn();
+        var player = client?.GetPlayerController()?.GetPlayerPawn();
 
         ReplyToCommand(client, "Test burn");
         _grenadeEffect.IgnitePawn(player, 1, 5);
     }
 
-    private void ExtraGrenadeTest(IGameClient client, StringCommand command)
+    private void ExtraGrenadeTest(IGameClient? client, StringCommand command)
     {
         var player = _playerManager.GetOrCreatePlayer(client);
 
@@ -443,7 +455,7 @@ public class Command : ICommand
         ReplyToCommand(client, $"AllowExtraGrenade: {player.AllowExtraGrenade}");
     }
 
-    public void ReplyToCommand(IGameClient client, string text)
+    public void ReplyToCommand(IGameClient? client, string text)
     {
         if (client == null)
         {

@@ -15,8 +15,13 @@ public class PlayerManager : IPlayerManager
         _players = new Dictionary<IGameClient, Player>();
     }
 
-    public Player GetOrCreatePlayer(IGameClient client)
+    public Player GetOrCreatePlayer(IGameClient? client)
     {
+        if(client == null)
+        {
+            throw new ArgumentNullException(nameof(client));
+        }
+        
         if (_players.ContainsKey(client))
         {
             return _players[client];

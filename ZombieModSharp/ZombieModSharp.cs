@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Sharp.Extensions.CommandManager;
 using Sharp.Extensions.GameEventManager;
+using Sharp.Modules.AdminManager.Shared;
 using Sharp.Shared;
 using Sharp.Shared.Abstractions;
 using Sharp.Shared.Managers;
@@ -19,6 +20,8 @@ public sealed class ZombieModSharp : IModSharpModule
 {
     public string DisplayName   => "Zombie ModSharp";
     public string DisplayAuthor => "Oylsister";
+
+    private IModSharpModuleInterface<IAdminManager>? _adminManager;
 
     private readonly ILogger<ZombieModSharp> _logger;
     // private readonly InterfaceBridge  _bridge;
@@ -36,6 +39,7 @@ public sealed class ZombieModSharp : IModSharpModule
     private readonly ISharpModuleManager  _modules;
 
     public static string Prefix { get; } = " \x04[Z:MS]\x01";
+    private const string AdminManagerAssemblyName = "Sharp.Modules.AdminManager";
 
     public ZombieModSharp(ISharedSystem sharedSystem,
                       string dllPath,
@@ -138,16 +142,43 @@ public sealed class ZombieModSharp : IModSharpModule
 
     public void OnAllModulesLoaded()
     {
-
+        TryResolveAdminManager();
     }
 
     public void OnLibraryConnected(string name)
     {
-
+        if (name.Equals(AdminManagerAssemblyName, StringComparison.OrdinalIgnoreCase))
+        {
+            TryResolveAdminManager(true);
+        }
     }
 
     public void OnLibraryDisconnect(string name)
     {
         
+    }
+
+    private void TryResolveAdminManager(bool logFailure = false)
+    {
+        if (_adminManager?.Instance is not null)
+        {
+            return;
+        }
+
+        _adminManager = _sharedSystem.GetSharpModuleManager()
+                                     .GetOptionalSharpModuleInterface<IAdminManager>(IAdminManager.Identity);
+
+        if (_adminManager?.Instance is null)
+        {
+            if (logFailure)
+            {
+                _logger.LogWarning("AdminManager is not installed. Admin commands will not work.");
+            }
+
+            return;
+        }
+
+        _command.GetAdminManager(_adminManager);
+        _command.RegisterAdminCommand();
     }
 }
