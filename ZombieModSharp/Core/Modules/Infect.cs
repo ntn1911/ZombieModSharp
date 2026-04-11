@@ -30,6 +30,7 @@ public class Infect : IInfect
     public static float CashMultiply = 1.0f;
 
     public event DelegateInfectPlayer? OnClientInfect;
+    public event DelegateHumanizeClient? OnClientHumanize;
 
     public Infect(ISharedSystem sharedSystem, ILogger<Infect> logger, IPlayerManager player, IPlayerClasses playerClasses, ICvarServices cvarServices, ISoundServices soundServices, IZTele zTele, ILeaderServices leaderServices, IGlowServices glowServices)
     {
@@ -169,6 +170,13 @@ public class Infect : IInfect
     public void HumanizeClient(IGameClient client, bool force = false)
     {
         if (client == null)
+        {
+            return;
+        }
+
+        var result = ZMS_OnClientHumanize(client, force);
+
+        if (result == EHookAction.SkipCallReturnOverride)
         {
             return;
         }
@@ -473,6 +481,11 @@ public class Infect : IInfect
     public EHookAction? ZMS_OnClientInfect(IGameClient client, IGameClient? attacker = null, bool motherzombie = false, bool force = false)
     {
         return OnClientInfect?.Invoke(client, attacker, motherzombie, force);
+    }
+
+    public EHookAction? ZMS_OnClientHumanize(IGameClient client, bool force = false)
+    {
+        return OnClientHumanize?.Invoke(client, force);
     }
 
     public bool IsInfectStarted()
