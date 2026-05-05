@@ -85,10 +85,18 @@ public class Infect : IInfect
 
         clientController.SwitchTeam(CStrikeTeam.TE);
 
+        var clientZombieClass = zmPlayer.ZombieClass;
+
         if(motherzombie)
         {
             if(_cvarServices.CvarList["Cvar_InfectMotherZombieSpawn"]?.GetBool() ?? false)
                 _ztele.TeleportToSpawn(client);
+
+            // we need to get mother zombie class from here.
+            var motherZombieClass = _playerClasses.GetMotherZombieClass();
+
+            if(motherZombieClass != null)
+                clientZombieClass = motherZombieClass;
         }
 
         // implement model changed and health.
@@ -103,7 +111,7 @@ public class Infect : IInfect
         _soundServices.EmitZombieSound(pawn, "zr.amb.scream");
         _modSharp.PrintChannelFilter(HudPrintChannel.Chat, $"{ZombieModSharp.Prefix} You have been infected! Go pass it on to as many other players as you can.", new RecipientFilter(client));
 
-        _playerClasses.ApplyPlayerClassAttribute(pawn, zmPlayer.ZombieClass!);
+        _playerClasses.ApplyPlayerClassAttribute(pawn, clientZombieClass!);
 
         // forcing drop all weapon.
         var weapons = pawn.GetWeaponService()?.GetMyWeapons();
