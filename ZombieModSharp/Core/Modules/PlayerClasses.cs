@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Sharp.Shared;
+using Sharp.Shared.Enums;
 using Sharp.Shared.GameEntities;
 using ZombieModSharp.Abstractions;
 
@@ -13,6 +14,8 @@ public class ClassAttribute
     public bool MotherZombie { get; set; } = false;
     public string Model { get; set; } = "default";
     public int Health { get; set; } = 100;
+    public int HealthRegen { get; set; } = 0;
+    public float HealthRegenInterval { get; set; } = 0.0f;
     public float NapalmDuration { get; set; } = 0.0f;
     public float Knockback { get; set; } = 3.0f;
     public float Speed { get; set; } = 250f;
@@ -23,12 +26,14 @@ public class PlayerClasses : IPlayerClasses
     private readonly ISharedSystem _sharedSystem;
     private readonly ILogger<PlayerClasses> _logger;
     private readonly IPlayerManager _playerManager;
+    private readonly IModSharp _modSharp;
 
     public PlayerClasses(ISharedSystem sharedSystem, IPlayerManager playerManager)
     {
         _sharedSystem = sharedSystem;
         _logger = _sharedSystem.GetLoggerFactory().CreateLogger<PlayerClasses>();
         _playerManager = playerManager;
+        _modSharp = _sharedSystem.GetModSharp();
     }
 
     public Dictionary<string, ClassAttribute> classesData = [];
@@ -90,8 +95,6 @@ public class PlayerClasses : IPlayerClasses
                 playerPawn.SetModel("characters/models/ctm_sas/ctm_sas.vmdl");
         }
 
-        SetClassArmor(playerPawn, team);
-
         var gameClient = playerPawn.GetController()?.GetGameClient();
 
         if (gameClient == null)
@@ -101,6 +104,10 @@ public class PlayerClasses : IPlayerClasses
         }
 
         var client = _playerManager.GetOrCreatePlayer(gameClient);
+
+        SetClassArmor(playerPawn, team);
+        InitialHeathRegen(playerPawn, classAttribute, client);
+
         client.ActiveClass = classAttribute;
     }
 
@@ -133,5 +140,46 @@ public class PlayerClasses : IPlayerClasses
             return null;
 
         return targetClass;
+    }
+
+    public ClassAttribute? GetMotherZombieClass()
+    {
+        return classesData.Values.FirstOrDefault(c => c.MotherZombie);
+    }
+
+    private void InitialHeathRegen(IPlayerPawn playerPawn, ClassAttribute classAttribute, Player? player)
+    {
+        if (player == null)
+        {
+            return;
+        }
+
+        if(player.RegenerationTimer != Guid.Empty)
+        {
+            _modSharp.StopTimer(player.RegenerationTimer);
+            player.RegenerationTimer = Guid.Empty;
+        }
+
+        if (classAttribute.HealthRegen > 0 && classAttribute.HealthRegenInterval > 0)
+        {
+            player.RegenerationTimer = _modSharp.PushTimer(new Func<TimerAction>(() =>
+            {
+                if (!playerPawn.IsAlive)
+                {
+                    return TimerAction.Stop;
+                }
+
+                var currentHealth = playerPawn.Health;
+                var maxHealth = classAttribute.Health;
+
+                if (currentHealth < maxHealth)
+                {
+                    var newHealth = Math.Min(currentHealth + classAttribute.HealthRegen, maxHealth);
+                    playerPawn.Health = newHealth;
+                }
+
+                return TimerAction.Continue;
+            }), classAttribute.HealthRegenInterval, GameTimerFlags.Repeatable | GameTimerFlags.StopOnRoundEnd | GameTimerFlags.StopOnMapEnd);
+        }
     }
 }
