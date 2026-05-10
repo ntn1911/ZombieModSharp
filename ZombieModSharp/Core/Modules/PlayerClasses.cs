@@ -86,15 +86,6 @@ public class PlayerClasses : IPlayerClasses
         if (classAttribute.Model != "default" || !string.IsNullOrEmpty(classAttribute.Model))
             playerPawn.SetModel(classAttribute.Model);
 
-        else
-        {
-            if (team == 0)
-                playerPawn.SetModel("characters/models/tm_phoenix/tm_phoenix.vmdl");
-
-            if (team == 1)
-                playerPawn.SetModel("characters/models/ctm_sas/ctm_sas.vmdl");
-        }
-
         var gameClient = playerPawn.GetController()?.GetGameClient();
 
         if (gameClient == null)
