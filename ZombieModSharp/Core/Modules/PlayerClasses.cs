@@ -97,8 +97,8 @@ public class PlayerClasses : IPlayerClasses
 
         menu.SetTitle("[ZombieModSharp] Player Class Menu");
 
-        menu.AddSubMenu("Human Classes", (controller) => ClassSelectionMenu(client, false));
-        menu.AddSubMenu("Human Classes", (controller) => ClassSelectionMenu(client, true));
+        menu.AddSubMenu("Human Classes", ClassSelectionMenu(client, false));
+        menu.AddSubMenu("Zombie Classes", ClassSelectionMenu(client, true));
         menu.AddExitItem();
 
         _menuManager.DisplayMenu(client, menu);
@@ -111,34 +111,37 @@ public class PlayerClasses : IPlayerClasses
         var player = _playerManager.GetOrCreatePlayer(client);
 
         var selectedClass = isZombie ? player.ZombieClass : player.HumanClass;
+        menu.SetTitle("[ZMS:Class] Current class: " + (selectedClass?.Name ?? "None"));
+        var classList = classesData.Where(c => c.Value.Team == (isZombie ? 0 : 1)).ToList();
 
-        menu.SetTitle("[ZombieModSharp] Current class: " + (selectedClass?.Name ?? "None"));
-
-        var classList = classesData.Values.Where(c => c.Team == (isZombie ? 0 : 1)).ToList();
-
-        foreach (var classEntry in classList)
+        foreach (var classObject in classList)
         {
-            var className = classEntry.Name;
+            var classValue = classObject.Value;
 
-            if(selectedClass == classEntry)
+            if(selectedClass == classValue)
             {
-                menu.AddDisabledItem(className);
+                menu.AddDisabledItem(classValue.Name + " (Selected)");
                 continue;
             }
 
-            menu.AddItem(className, (controller) => 
+            menu.AddItem(_ => classValue.Name, controller => 
             {
                 if (isZombie)
                 {
-                    player.ZombieClass = classEntry;
-                    _sqlite.InsertPlayerClassesAsync(client.SteamId.ToString(), player.HumanClass?.Name, classEntry.Name);
+                    player.ZombieClass = classValue;
+                    var humanClassKey = classesData.FirstOrDefault(c => c.Value == player.HumanClass).Key;
+                    _sqlite.InsertPlayerClassesAsync(client.SteamId.ToString(), humanClassKey, classObject.Key);
                 }
                 else
                 {
-                    player.HumanClass = classEntry;
+                    player.HumanClass = classValue;
+                    var zombieClassKey = classesData.FirstOrDefault(c => c.Value == player.ZombieClass).Key;
+                    _sqlite.InsertPlayerClassesAsync(client.SteamId.ToString(), classObject.Key, zombieClassKey);
                 }
 
                 _modSharp.PrintChannelFilter(HudPrintChannel.Chat, $"{ZombieModSharp.Prefix} You have selected the new class, this change will be applied in the next respawn.", new RecipientFilter(client));
+                player = _playerManager.GetOrCreatePlayer(client);
+                controller.Refresh();
             });
         }
 
