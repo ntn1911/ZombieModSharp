@@ -19,8 +19,9 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="ModSharp.Sharp.Modules.MenuManager.Shared" Version="*" />
     <PackageReference Include="ModSharp.Sharp.Shared" Version="*" />
-    <PackageReference Include="Sharp.Modules.AdminManager.Shared" Version="2.1.117" />
+    <PackageReference Include="Sharp.Modules.AdminManager.Shared" Version="*" />
   </ItemGroup>
 
   <ItemGroup>

@@ -27,10 +27,11 @@ public class Command : ICommand
     private readonly ILeaderServices _leaderServices;
     private readonly IGlowServices _glowServices;
     private readonly IMarkerServices _markerServices;
+    private readonly IPlayerClasses _playerClasses;
 
     private IAdminCommandRegistry? _adminManager;
 
-    public Command(IPlayerManager playerManager, IZTele ztele, IInfect infect, ISharedSystem sharedSystem, ICommandManager command, ISqliteDatabase sqlite, ICvarServices cvarServices, IGrenadeEffect grenadeEffect, ILeaderServices leader, IGlowServices glowServices, IMarkerServices markerServices)
+    public Command(IPlayerManager playerManager, IZTele ztele, IInfect infect, ISharedSystem sharedSystem, ICommandManager command, ISqliteDatabase sqlite, ICvarServices cvarServices, IGrenadeEffect grenadeEffect, ILeaderServices leader, IGlowServices glowServices, IMarkerServices markerServices, IPlayerClasses playerClasses)
     {
         _playerManager = playerManager;
         _ztele = ztele;
@@ -44,6 +45,7 @@ public class Command : ICommand
         _leaderServices = leader;
         _glowServices = glowServices;
         _markerServices = markerServices;
+        _playerClasses = playerClasses;
     }
 
     public void GetAdminManager(IModSharpModuleInterface<IAdminManager>? adminManager)
@@ -55,6 +57,8 @@ public class Command : ICommand
     {
         _command.RegisterClientCommand("ztele", ZTeleCommand);
         _command.RegisterClientCommand("zsound", ZSoundCommand);
+
+        _command.RegisterClientCommand("zclass", ZClassCommand);
     }
 
     public void RegisterAdminCommand()
@@ -68,6 +72,7 @@ public class Command : ICommand
         _adminManager?.RegisterAdminCommand("setleader", OnLeaderCommand, ["admin:slay"]);
         _adminManager?.RegisterAdminCommand("leader", OnLeaderCommand, ["admin:slay"]);
         _adminManager?.RegisterAdminCommand("ql", OnQuitLeaderCommand, ["admin:slay"]);
+        _adminManager?.RegisterAdminCommand("removeleader", OnQuitLeaderCommand, ["admin:slay"]);
         _adminManager?.RegisterAdminCommand("pm", OnMarkerCommand, ["admin:slay"]);
         _adminManager?.RegisterAdminCommand("dm", OnDisableMarkerCommand, ["admin:slay"]);
         _adminManager?.RegisterAdminCommand("glow", OnGlowCommand, ["admin:slay"]);
@@ -410,6 +415,11 @@ public class Command : ICommand
             var success = await _sqlite.InsertPlayerSoundAsync(client.SteamId.ToString(), player.SoundEnabled, volume);
             ReplyToCommand(client, $"You have{(player.SoundEnabled ? "\x05 Enabled" : "\x07 Disabled")}\x01 zombie sound. {(player.SoundEnabled ? $"And set volume to\x06 {(int)player.SoundVolume}" : string.Empty)}");
         });
+    }
+
+    private void ZClassCommand(IGameClient client, StringCommand command)
+    {
+        _playerClasses.PlayerClassMenu(client);
     }
 
     private void ToggleRespawnCommand(IGameClient? client, StringCommand command)

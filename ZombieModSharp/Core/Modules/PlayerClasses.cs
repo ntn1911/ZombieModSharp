@@ -1,9 +1,13 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using Sharp.Modules.MenuManager.Shared;
 using Sharp.Shared;
 using Sharp.Shared.Enums;
 using Sharp.Shared.GameEntities;
+using Sharp.Shared.Objects;
+using Sharp.Shared.Types;
 using ZombieModSharp.Abstractions;
+using ZombieModSharp.Abstractions.Storage;
 
 namespace ZombieModSharp.Core.Modules;
 
@@ -27,13 +31,16 @@ public class PlayerClasses : IPlayerClasses
     private readonly ILogger<PlayerClasses> _logger;
     private readonly IPlayerManager _playerManager;
     private readonly IModSharp _modSharp;
+    private readonly ISqliteDatabase _sqlite;
+    private IMenuManager? _menuManager;
 
-    public PlayerClasses(ISharedSystem sharedSystem, IPlayerManager playerManager)
+    public PlayerClasses(ISharedSystem sharedSystem, IPlayerManager playerManager, ISqliteDatabase sqliteDatabase)
     {
         _sharedSystem = sharedSystem;
         _logger = _sharedSystem.GetLoggerFactory().CreateLogger<PlayerClasses>();
         _playerManager = playerManager;
         _modSharp = _sharedSystem.GetModSharp();
+        _sqlite = sqliteDatabase;
     }
 
     public Dictionary<string, ClassAttribute> classesData = [];
@@ -73,6 +80,72 @@ public class PlayerClasses : IPlayerClasses
         }
     }
 
+    public void GetMenuManager(IModSharpModuleInterface<IMenuManager>? menuManager)
+    {
+        _menuManager = menuManager?.Instance;
+    }
+
+    public void PlayerClassMenu(IGameClient client)
+    {
+        if (_menuManager == null)
+        {
+            _logger.LogError("MenuManager is not available!");
+            return;
+        }
+
+        var menu = Menu.Create().Build();
+
+        menu.SetTitle("[ZombieModSharp] Player Class Menu");
+
+        menu.AddSubMenu("Human Classes", (controller) => ClassSelectionMenu(client, false));
+        menu.AddSubMenu("Human Classes", (controller) => ClassSelectionMenu(client, true));
+        menu.AddExitItem();
+
+        _menuManager.DisplayMenu(client, menu);
+    }
+
+    private Menu ClassSelectionMenu(IGameClient client, bool isZombie)
+    {
+        var menu = Menu.Create().Build();
+
+        var player = _playerManager.GetOrCreatePlayer(client);
+
+        var selectedClass = isZombie ? player.ZombieClass : player.HumanClass;
+
+        menu.SetTitle("[ZombieModSharp] Current class: " + (selectedClass?.Name ?? "None"));
+
+        var classList = classesData.Values.Where(c => c.Team == (isZombie ? 0 : 1)).ToList();
+
+        foreach (var classEntry in classList)
+        {
+            var className = classEntry.Name;
+
+            if(selectedClass == classEntry)
+            {
+                menu.AddDisabledItem(className);
+                continue;
+            }
+
+            menu.AddItem(className, (controller) => 
+            {
+                if (isZombie)
+                {
+                    player.ZombieClass = classEntry;
+                    _sqlite.InsertPlayerClassesAsync(client.SteamId.ToString(), player.HumanClass?.Name, classEntry.Name);
+                }
+                else
+                {
+                    player.HumanClass = classEntry;
+                }
+
+                _modSharp.PrintChannelFilter(HudPrintChannel.Chat, $"{ZombieModSharp.Prefix} You have selected the new class, this change will be applied in the next respawn.", new RecipientFilter(client));
+            });
+        }
+
+        menu.AddBackItem();
+        return menu;
+    }
+
     public void ApplyPlayerClassAttribute(IPlayerPawn playerPawn, ClassAttribute classAttribute)
     {
         if (!playerPawn.IsAlive)
@@ -83,7 +156,7 @@ public class PlayerClasses : IPlayerClasses
         playerPawn.Health = classAttribute.Health;
         var team = classAttribute.Team;
 
-        if (classAttribute.Model != "default" || !string.IsNullOrEmpty(classAttribute.Model))
+        if (classAttribute.Model != "default" && !string.IsNullOrEmpty(classAttribute.Model))
             playerPawn.SetModel(classAttribute.Model);
 
         var gameClient = playerPawn.GetController()?.GetGameClient();

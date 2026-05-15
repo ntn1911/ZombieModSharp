@@ -342,13 +342,13 @@ public class Infect : IInfect
         if (ctCount <= 0 && tCount > 0)
         {
             InfectStarted = false;
-            _modSharp.GetGameRules().TerminateRound(5.0f, RoundEndReason.TerroristsWin);
+            _modSharp.GetGameRules().TerminateRound(4.0f, RoundEndReason.TerroristsWin);
         }
 
         else if (tCount <= 0 && ctCount > 0)
         {
             InfectStarted = false;
-            _modSharp.GetGameRules().TerminateRound(5.0f, RoundEndReason.CTsWin);
+            _modSharp.GetGameRules().TerminateRound(4.0f, RoundEndReason.CTsWin);
         }
     }
 

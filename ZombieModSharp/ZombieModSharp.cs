@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Sharp.Extensions.CommandManager;
 using Sharp.Extensions.GameEventManager;
 using Sharp.Modules.AdminManager.Shared;
+using Sharp.Modules.MenuManager.Shared;
 using Sharp.Shared;
 using Sharp.Shared.Abstractions;
 using Sharp.Shared.Managers;
@@ -22,6 +23,7 @@ public sealed class ZombieModSharp : IModSharpModule
     public string DisplayAuthor => "Oylsister";
 
     private IModSharpModuleInterface<IAdminManager>? _adminManager;
+    private IModSharpModuleInterface<IMenuManager>? _menuManager;
 
     private readonly ILogger<ZombieModSharp> _logger;
     // private readonly InterfaceBridge  _bridge;
@@ -37,6 +39,7 @@ public sealed class ZombieModSharp : IModSharpModule
     private readonly IInfect _infect;
     private readonly ILeaderServices _leaderServices;
     private readonly ISharpModuleManager  _modules;
+    private readonly IPlayerClasses _playerClasses;
 
     public static string Prefix { get; } = " \x04[Z:MS]\x01";
     private const string AdminManagerAssemblyName = "Sharp.Modules.AdminManager";
@@ -94,6 +97,7 @@ public sealed class ZombieModSharp : IModSharpModule
         _cvarServices = _serviceProvider.GetRequiredService<ICvarServices>();
         _infect = _serviceProvider.GetRequiredService<IInfect>();
         _leaderServices = _serviceProvider.GetRequiredService<ILeaderServices>();
+        _playerClasses = _serviceProvider.GetRequiredService<IPlayerClasses>();
     }
 
     public bool Init()
@@ -143,6 +147,8 @@ public sealed class ZombieModSharp : IModSharpModule
     public void OnAllModulesLoaded()
     {
         TryResolveAdminManager();
+        _menuManager = _sharedSystem.GetSharpModuleManager().GetOptionalSharpModuleInterface<IMenuManager>(IMenuManager.Identity);
+        _playerClasses.GetMenuManager(_menuManager);
     }
 
     public void OnLibraryConnected(string name)
