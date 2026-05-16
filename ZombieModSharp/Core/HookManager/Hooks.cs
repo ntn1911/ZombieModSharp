@@ -97,7 +97,7 @@ public class Hooks : IHooks
             {
                 if(_entityManager.FindEntityByHandle(item)?.ItemDefinitionIndex == (ushort)EconItemId.Hegrenade)
                 {
-                    if(!client.AllowExtraGrenade)
+                    if(!client.AllowExtraGrenade && weapon.ItemDefinitionIndex == (ushort)EconItemId.Hegrenade)
                         return new HookReturnValue<bool>(EHookAction.SkipCallReturnOverride, false);
                 }
             }
@@ -112,6 +112,7 @@ public class Hooks : IHooks
         var attacker = _entityManager.FindEntityByHandle(param.AttackerPawnHandle)?.GetOriginalController()?.GetGameClient();
 
         var client = param.Controller.GetGameClient();
+        var victimPawn = param.Controller.GetPlayerPawn();
         if (attacker == null || client == null)
         {
             return result;
@@ -124,6 +125,21 @@ public class Hooks : IHooks
         {
             param.Damage = 1;
             return result;
+        }
+
+        if(victimPlayer.IsHuman())
+        {
+            var inflictor = _entityManager.FindEntityByHandle(param.InflictorHandle);
+            //_modsharp.PrintToChatAll($"Inflictor: {inflictor?.Classname} | Attacker: {attacker.Name} | Victim: {client.Name} | Owner: {inflictor?.OwnerEntity?.AsPlayerPawn()?.GetController()?.PlayerName}");
+            if(inflictor?.Classname.Contains("inferno") ?? false )
+            {
+                var owner = inflictor.OwnerEntity;
+                if(owner?.AsPlayerPawn() == victimPawn)
+                {
+                    //_modsharp.PrintToChatAll($"Prevent self ignite for player {client.Name}");
+                    return new HookReturnValue<long>(EHookAction.SkipCallReturnOverride, 0);
+                }
+            }
         }
 
         if(attackerPlayer.IsHuman() && victimPlayer.IsInfected())
