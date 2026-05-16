@@ -97,8 +97,8 @@ public class PlayerClasses : IPlayerClasses
 
         menu.SetTitle("[ZombieModSharp] Player Class Menu");
 
-        menu.AddSubMenu("Human Classes", ClassSelectionMenu(client, false));
-        menu.AddSubMenu("Zombie Classes", ClassSelectionMenu(client, true));
+        menu.AddSubMenu("Human Classes", _ => ClassSelectionMenu(client, false));
+        menu.AddSubMenu("Zombie Classes", _ => ClassSelectionMenu(client, true));
         menu.AddExitItem();
 
         _menuManager.DisplayMenu(client, menu);
@@ -114,6 +114,7 @@ public class PlayerClasses : IPlayerClasses
         menu.SetTitle("[ZMS:Class] Current class: " + (selectedClass?.Name ?? "None"));
         var classList = classesData.Where(c => c.Value.Team == (isZombie ? 0 : 1)).ToList();
 
+        // this only added one time.
         foreach (var classObject in classList)
         {
             var classValue = classObject.Value;
@@ -140,8 +141,7 @@ public class PlayerClasses : IPlayerClasses
                 }
 
                 _modSharp.PrintChannelFilter(HudPrintChannel.Chat, $"{ZombieModSharp.Prefix} You have selected the new class, this change will be applied in the next respawn.", new RecipientFilter(client));
-                player = _playerManager.GetOrCreatePlayer(client);
-                controller.Refresh();
+                controller.Exit();
             });
         }
 
