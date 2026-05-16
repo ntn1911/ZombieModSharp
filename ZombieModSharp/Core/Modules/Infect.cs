@@ -401,7 +401,7 @@ public class Infect : IInfect
     {
         // Get All Player with motherzombie status, and alive.
         var candidate = _player.GetAllPlayers().Where(p => p.Value.MotherZombieStatus == MotherZombieStatus.None
-            && (p.Key.GetPlayerController()?.GetPlayerPawn()?.IsAlive ?? false) && p.Value.MotherZombieImmune == false);
+            && (p.Key.GetPlayerController()?.GetPlayerPawn()?.IsAlive ?? false) && p.Key.GetPlayerController()?.Team != CStrikeTeam.UnAssigned && p.Key.GetPlayerController()?.Team != CStrikeTeam.Spectator && p.Value.MotherZombieImmune == false);
 
         // we could just use all player and count them but this sometime unfair for player who has to fight for spectator
         var totalPlayer = _player.GetAllPlayers().Where(p => p.Key.GetPlayerController()?.IsAlive ?? false).Count();

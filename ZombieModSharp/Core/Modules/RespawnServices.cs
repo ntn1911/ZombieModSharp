@@ -66,7 +66,7 @@ public class RespawnServices : IRespawnServices
             return;
         }
 
-        if(playerPawn.Team == CStrikeTeam.Spectator || playerPawn.Team == CStrikeTeam.UnAssigned)
+        if(playerPawn.Team == CStrikeTeam.Spectator || playerPawn.Team == CStrikeTeam.UnAssigned || client.Team == CStrikeTeam.Spectator || client.Team == CStrikeTeam.UnAssigned)
         {
             return;
         }
