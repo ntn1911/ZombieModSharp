@@ -160,7 +160,7 @@ public class Weapons : IWeapons
 
         if(weapon.MaxPurchase > 0)
         {
-            if(player.PurchaseHistory[weapon.WeaponName] >= weapon.MaxPurchase)
+            if(player.PurchaseHistory.TryGetValue(weapon.WeaponName, out var weaponData) && weaponData >= weapon.MaxPurchase)
             {
                 PrintToChat(client, $"Your purchase of weapon \x05{weapon.WeaponName}\x01 has reached maximum number that allow this round.");
                 return;
