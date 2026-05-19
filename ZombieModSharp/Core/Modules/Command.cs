@@ -77,9 +77,23 @@ public class Command : ICommand
         _adminManager?.RegisterAdminCommand("dm", OnDisableMarkerCommand, ["admin:slay"]);
         _adminManager?.RegisterAdminCommand("glow", OnGlowCommand, ["admin:slay"]);
         _adminManager?.RegisterAdminCommand("disglow", OnDisableGlowCommand, ["admin:slay"]);
+        _adminManager?.RegisterAdminCommand("rr", OnRoundRestartCommand , ["admin:slay"]);
     }
 
 
+    public void OnRoundRestartCommand(IGameClient? client, StringCommand command)
+    {
+        if (client == null || !client.IsValid) return;
+        var gameRules = _sharedSystem.GetModSharp().GetGameRules();
+        if (gameRules == null)
+        {
+            ReplyToCommand(client, "GameRules is not available now!");
+            return;
+        }
+
+        // Draw the round to trigger a restart
+        gameRules.TerminateRound(0.0f, RoundEndReason.RoundDraw);
+    }
     public void OnGlowCommand(IGameClient? client, StringCommand command)
     {
         if (client == null || !client.IsValid) return;
