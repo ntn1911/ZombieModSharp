@@ -80,7 +80,6 @@ public class Command : ICommand
         _adminManager?.RegisterAdminCommand("rr", OnRoundRestartCommand , ["admin:slay"]);
     }
 
-
     public void OnRoundRestartCommand(IGameClient? client, StringCommand command)
     {
         if (client == null || !client.IsValid) return;
