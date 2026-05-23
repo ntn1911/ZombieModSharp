@@ -58,6 +58,7 @@ public class Command : ICommand
         _command.RegisterClientCommand("ztele", ZTeleCommand);
         _command.RegisterClientCommand("zsound", ZSoundCommand);
         _command.RegisterClientCommand("zclass", ZClassCommand);
+        _command.RegisterClientCommand("vl", VoteLeaderCommand);
     }
 
     public void RegisterAdminCommand()
@@ -78,7 +79,53 @@ public class Command : ICommand
         _adminManager?.RegisterAdminCommand("disglow", OnDisableGlowCommand, ["admin:slay"]);
         
     }
-    //}
+
+
+    private void VoteLeaderCommand(IGameClient? client, StringCommand command)
+    {
+        if (client == null || !client.IsValid) return;
+
+        if (command.ArgCount < 1)
+        {
+            ReplyToCommand(client, "Usage: vl <target>");
+            return;
+        }
+
+        var arg = command.GetArg(1);
+        var target = GetTargets(client, arg).FirstOrDefault();
+
+        if (target == null || !target.IsValid)
+        {
+            ReplyToCommand(client, "Can't find any player");
+            return;
+        }
+
+        // 已經是 leader
+        var targetController = target.GetPlayerController();
+        if (targetController == null || !targetController.IsValid())
+        {
+            ReplyToCommand(client, "Can't find any player controller");
+            return;
+        }
+
+        if (_leaderServices.IsClientLeader(targetController))
+        {
+            ReplyToCommand(client, $"{target.Name} is already a leader.");
+            return;
+        }
+
+        var result = _leaderServices.VoteLeader(client, target);
+
+        if (result.becameLeader)
+        {
+            var leadersNow = _leaderServices.GetAllLeaders().Count();
+            _modsharp.PrintToChatAll($"{target.Name} is became a new leader [{leadersNow}/2]");
+        }
+        else
+        {
+            ReplyToCommand(client, result.message);
+        }
+    }
     public void OnGlowCommand(IGameClient? client, StringCommand command)
     {
         if (client == null || !client.IsValid) return;
@@ -102,7 +149,7 @@ public class Command : ICommand
 
         if (pawn == null)
         {
-            ReplyToCommand(client, $"Entity {controller.PlayerName} have no Pawn�Acan't Glow");
+            ReplyToCommand(client, $"Entity {controller.PlayerName} can't Glow");
             return;
         }
 
