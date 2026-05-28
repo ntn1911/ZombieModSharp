@@ -262,7 +262,7 @@ public class Events : IEvents
             {
                 pawn?.GetPlayerPawn()?.SetCollisionGroup(CollisionGroupType.Debris);
             }
-        }, 0.05, GameTimerFlags.None | GameTimerFlags.StopOnMapEnd | GameTimerFlags.StopOnRoundEnd);
+        }, 0.05f, GameTimerFlags.None | GameTimerFlags.StopOnMapEnd | GameTimerFlags.StopOnRoundEnd);
     }
 
     private void OnWeaponFired(IGameEvent fired)
