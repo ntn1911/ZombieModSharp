@@ -332,11 +332,13 @@ public class Infect : IInfect
                 continue;
             }
 
-            if (controller.Team == CStrikeTeam.CT)
+            var isAlive = controller.GetPlayerPawn()?.IsAlive ?? false;
+
+            if (controller.Team == CStrikeTeam.CT && isAlive)
             {
                 ctCount++;
             }
-            else if (controller.Team == CStrikeTeam.TE)
+            else if (controller.Team == CStrikeTeam.TE && isAlive)
             {
                 tCount++;
             }
