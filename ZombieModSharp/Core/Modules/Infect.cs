@@ -29,6 +29,10 @@ public class Infect : IInfect
     private bool InfectStarted = false;
     public static float CashMultiply = 1.0f;
 
+    private Guid infectTimer = Guid.Empty;
+    private Guid countdownTimer = Guid.Empty;
+
+
     public event DelegateInfectPlayer? OnClientInfect;
     public event DelegateHumanizeClient? OnClientHumanize;
 
@@ -262,7 +266,20 @@ public class Infect : IInfect
 
     public void OnRoundEnd()
     {
+        // gotta stop infection timer if still running.
         InfectStarted = false;
+
+        if(infectTimer != Guid.Empty)
+        {
+            _modSharp.StopTimer(infectTimer);
+            infectTimer = Guid.Empty;
+        }
+
+        if(countdownTimer != Guid.Empty)
+        {
+            _modSharp.StopTimer(countdownTimer);
+            countdownTimer = Guid.Empty;
+        }
 
         var allPlayers = _player.GetAllPlayers();
 
@@ -347,13 +364,13 @@ public class Infect : IInfect
         if (ctCount <= 0 && tCount > 0)
         {
             InfectStarted = false;
-            _modSharp.GetGameRules().TerminateRound(4.0f, RoundEndReason.TerroristsWin);
+            _modSharp.GetGameRules().TerminateRound(5.0f, RoundEndReason.TerroristsWin);
         }
 
         else if (tCount <= 0 && ctCount > 0)
         {
             InfectStarted = false;
-            _modSharp.GetGameRules().TerminateRound(4.0f, RoundEndReason.CTsWin);
+            _modSharp.GetGameRules().TerminateRound(5.0f, RoundEndReason.CTsWin);
         }
     }
 
@@ -361,7 +378,19 @@ public class Infect : IInfect
     {
         var timerCount = _cvarServices.CvarList["Cvar_InfectCountdown"]?.GetFloat() ?? 15.0f;
 
-        var timer = _modSharp.PushTimer(new Func<TimerAction>(() =>
+        if(infectTimer != Guid.Empty)
+        {
+            _modSharp.StopTimer(infectTimer);
+            infectTimer = Guid.Empty;
+        }
+
+        if(countdownTimer != Guid.Empty)
+        {
+            _modSharp.StopTimer(countdownTimer);
+            countdownTimer = Guid.Empty;
+        }
+
+        infectTimer = _modSharp.PushTimer(new Func<TimerAction>(() =>
         {
             try
             {
@@ -379,7 +408,7 @@ public class Infect : IInfect
 
         _modSharp.PrintChannelAll(HudPrintChannel.Hint, $"First infection start in {timerCount} seconds");
 
-        var countdown = _modSharp.PushTimer(new Func<TimerAction>(() =>
+        countdownTimer = _modSharp.PushTimer(new Func<TimerAction>(() =>
         {
             try
             {
