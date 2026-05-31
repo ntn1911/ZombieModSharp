@@ -31,6 +31,10 @@ public class Infect : IInfect
     private bool InfectStarted = false;
     public static float CashMultiply = 1.0f;
 
+    private Guid infectTimer = Guid.Empty;
+    private Guid countdownTimer = Guid.Empty;
+
+
     public event DelegateInfectPlayer? OnClientInfect;
     public event DelegateHumanizeClient? OnClientHumanize;
 
@@ -240,6 +244,9 @@ public class Infect : IInfect
                 continue;
             }
 
+            if(controller.Team == CStrikeTeam.Spectator || controller.Team == CStrikeTeam.UnAssigned)
+                continue;
+
             controller.SwitchTeam(CStrikeTeam.CT);
         }
     }
@@ -263,7 +270,20 @@ public class Infect : IInfect
 
     public void OnRoundEnd()
     {
+        // gotta stop infection timer if still running.
         InfectStarted = false;
+
+        if(infectTimer != Guid.Empty)
+        {
+            _modSharp.StopTimer(infectTimer);
+            infectTimer = Guid.Empty;
+        }
+
+        if(countdownTimer != Guid.Empty)
+        {
+            _modSharp.StopTimer(countdownTimer);
+            countdownTimer = Guid.Empty;
+        }
 
         var allPlayers = _player.GetAllPlayers();
 
@@ -330,11 +350,13 @@ public class Infect : IInfect
                 continue;
             }
 
-            if (controller.Team == CStrikeTeam.CT)
+            var isAlive = controller.GetPlayerPawn()?.IsAlive ?? false;
+
+            if (controller.Team == CStrikeTeam.CT && isAlive)
             {
                 ctCount++;
             }
-            else if (controller.Team == CStrikeTeam.TE)
+            else if (controller.Team == CStrikeTeam.TE && isAlive)
             {
                 tCount++;
             }
@@ -401,7 +423,19 @@ public class Infect : IInfect
     {
         var timerCount = _cvarServices.CvarList["Cvar_InfectCountdown"]?.GetFloat() ?? 15.0f;
 
-        var timer = _modSharp.PushTimer(new Func<TimerAction>(() =>
+        if(infectTimer != Guid.Empty)
+        {
+            _modSharp.StopTimer(infectTimer);
+            infectTimer = Guid.Empty;
+        }
+
+        if(countdownTimer != Guid.Empty)
+        {
+            _modSharp.StopTimer(countdownTimer);
+            countdownTimer = Guid.Empty;
+        }
+
+        infectTimer = _modSharp.PushTimer(new Func<TimerAction>(() =>
         {
             try
             {
@@ -419,7 +453,7 @@ public class Infect : IInfect
 
         _modSharp.PrintChannelAll(HudPrintChannel.Hint, $"First infection start in {timerCount} seconds");
 
-        var countdown = _modSharp.PushTimer(new Func<TimerAction>(() =>
+        countdownTimer = _modSharp.PushTimer(new Func<TimerAction>(() =>
         {
             try
             {
@@ -446,7 +480,7 @@ public class Infect : IInfect
     {
         // Get All Player with motherzombie status, and alive.
         var candidate = _player.GetAllPlayers().Where(p => p.Value.MotherZombieStatus == MotherZombieStatus.None
-            && (p.Key.GetPlayerController()?.GetPlayerPawn()?.IsAlive ?? false) && p.Key.GetPlayerController()?.Team != CStrikeTeam.UnAssigned && p.Key.GetPlayerController()?.Team != CStrikeTeam.Spectator && p.Value.MotherZombieImmune == false);
+            && (p.Key.GetPlayerController()?.GetPlayerPawn()?.IsAlive ?? false) && p.Value.MotherZombieImmune == false);
 
         // we could just use all player and count them but this sometime unfair for player who has to fight for spectator
         var totalPlayer = _player.GetAllPlayers().Where(p => p.Key.GetPlayerController()?.IsAlive ?? false).Count();
@@ -472,6 +506,10 @@ public class Infect : IInfect
                 {
                     // we count how many mother zombie is made.
                     made++;
+
+                    if(player.Key.GetPlayerController()?.Team == CStrikeTeam.Spectator || player.Key.GetPlayerController()?.Team == CStrikeTeam.UnAssigned)
+                        continue;
+
                     InfectPlayer(player.Key, null, true, false);
 
                     // chosen for this round.
@@ -505,6 +543,9 @@ public class Infect : IInfect
         // loop again.
         foreach (var player in selectedMotherZombies)
         {
+            if(player.Key.GetPlayerController()?.Team == CStrikeTeam.Spectator || player.Key.GetPlayerController()?.Team == CStrikeTeam.UnAssigned)
+                continue;
+                
             InfectPlayer(player.Key, null, true, false);
             player.Value.MotherZombieStatus = MotherZombieStatus.Chosen;
         }
