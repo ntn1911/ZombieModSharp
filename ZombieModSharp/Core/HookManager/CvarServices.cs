@@ -42,6 +42,8 @@ public class CvarServices : ICvarServices
         CvarList["Cvar_InfectKnockbackScale"] = _conVarManager.CreateConVar("zms_infect_knockback_scale", 1.0f, 0.01f, 100.0f, "Knockback scale for modifying", ConVarFlags.Release);
         CvarList["Cvar_InfectWarmupEnabled"] = _conVarManager.CreateConVar("zms_infect_warmup_enabled", false, "Enable infection game during warmup or not", ConVarFlags.Release);
         CvarList["Cvar_InfectDamageCash"] = _conVarManager.CreateConVar("zms_infect_damage_cash", 1.0f, 0.0f, 100.0f, "Multiplier cash that will receive when damage the zombie.", ConVarFlags.Release);
+        CvarList["Cvar_InfectHumanWinOverlay"] = _conVarManager.CreateConVar("zms_infect_human_win_overlay", "particles/oylsister/human_overlay.vpcf", "Overlay image path for human win in infection mode.", ConVarFlags.Release);
+        CvarList["Cvar_InfectZombieWinOverlay"] = _conVarManager.CreateConVar("zms_infect_zombie_win_overlay", "particles/oylsister/zombie_overlay.vpcf", "Overlay image path for zombie win in infection mode.", ConVarFlags.Release);
 
         CvarList["Cvar_RespawnEnabled"] = _conVarManager.CreateConVar("zms_respawn_enabled", true, "Enable respawn during the round.", ConVarFlags.Release);
         CvarList["Cvar_RespawnDelay"] = _conVarManager.CreateConVar("zms_respawn_delay", 5.0f, "Respawn Delay timer after death.", ConVarFlags.Release);

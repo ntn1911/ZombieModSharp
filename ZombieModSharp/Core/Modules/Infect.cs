@@ -25,6 +25,8 @@ public class Infect : IInfect
     private readonly IZTele _ztele;
     private readonly ILeaderServices _leaderServices;
     private readonly IGlowServices _glowServices;
+    private readonly IParticleManager _particleManager;
+    private readonly IClientManager _clientManager;
 
     private bool InfectStarted = false;
     public static float CashMultiply = 1.0f;
@@ -46,6 +48,8 @@ public class Infect : IInfect
         _ztele = zTele;
         _leaderServices = leaderServices;
         _glowServices = glowServices;
+        _particleManager = _sharedSystem.GetParticleManager();
+        _clientManager = _sharedSystem.GetClientManager();
     }
 
     public void InfectPlayer(IGameClient client, IGameClient? attacker = null, bool motherzombie = false, bool force = false)
@@ -313,16 +317,13 @@ public class Infect : IInfect
         {
             return;
         }
-        var allPlayers = _player.GetAllPlayers();
+        var allClient = _clientManager.GetGameClients();
 
         int ctCount = 0;
         int tCount = 0;
 
-        foreach (var kvp in allPlayers)
+        foreach (var client in allClient)
         {
-            var client = kvp.Key;
-            var zmPlayer = kvp.Value;
-
             var controller = client.GetPlayerController();
             if (controller == null)
             {
@@ -343,12 +344,56 @@ public class Infect : IInfect
         {
             InfectStarted = false;
             _modSharp.GetGameRules().TerminateRound(4.0f, RoundEndReason.TerroristsWin);
+            var zombieOverlay = _cvarServices.CvarList["Cvar_InfectZombieWinOverlay"]?.GetString() ?? "";
+
+            if(!string.IsNullOrEmpty(zombieOverlay))
+            {
+                foreach (var client in allClient)
+                {
+                    var controller = client.GetPlayerController();
+                    if (controller == null)
+                    {
+                        continue;
+                    }
+
+                    var pawn = controller.GetPlayerPawn();
+
+                    if(pawn == null)
+                    {
+                        continue;
+                    }
+                    
+                    _particleManager.DispatchParticleEffect(zombieOverlay, ParticleAttachmentType.MainView, pawn, 0, true, new(client));
+                };
+            }
         }
 
         else if (tCount <= 0 && ctCount > 0)
         {
             InfectStarted = false;
             _modSharp.GetGameRules().TerminateRound(4.0f, RoundEndReason.CTsWin);
+
+            var humanOverlay = _cvarServices.CvarList["Cvar_InfectHumanWinOverlay"]?.GetString() ?? "";
+
+            if(!string.IsNullOrEmpty(humanOverlay))
+            {
+                foreach (var client in allClient)
+                {
+                    var controller = client.GetPlayerController();
+                    if (controller == null)
+                    {
+                        continue;
+                    }
+
+                    var pawn = controller.GetPlayerPawn();
+
+                    if(pawn == null)
+                    {
+                        continue;
+                    }
+                    _particleManager.DispatchParticleEffect(humanOverlay, ParticleAttachmentType.MainView, pawn, 0, true, new(client));
+                };
+            }
         }
     }
 
