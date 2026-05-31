@@ -86,4 +86,6 @@ public class Player
     public bool MotherZombieImmune { get; set; } = false;
 
     public Guid RegenerationTimer { get; set; } = Guid.Empty;
+    public int LeaderVoteCount { get; set; } = 0;
+    public IGameClient? LeaderVotedTarget { get; set; } = null;
 }

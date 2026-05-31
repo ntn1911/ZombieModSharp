@@ -17,90 +17,86 @@ public class LeaderServices : ILeaderServices
     private ILogger<LeaderServices> _logger;
     private readonly IGlowServices _glowMethod;
     private readonly IGameEventManager _gameEventManager;
+    private readonly IPlayerManager _playerManager;
+    private readonly IModSharp _modsharp;
 
     //Vote logics for leader side
     private readonly Dictionary<string, HashSet<string>> _voteMap = new();
     private readonly object _voteLock = new();
 
-    public LeaderServices(ISharedSystem sharedSystem, ILogger<LeaderServices> logger, IGlowServices glowMethod, IGameEventManager gameEventManager)
+    public LeaderServices(ISharedSystem sharedSystem, ILogger<LeaderServices> logger, IGlowServices glowMethod, IGameEventManager gameEventManager, IPlayerManager playerManager)
     {
         _sharedSystem = sharedSystem;
         _logger = logger;
         _glowMethod = glowMethod;
         _gameEventManager = gameEventManager;
+        _playerManager = playerManager;
+        _modsharp = _sharedSystem.GetModSharp();
     }
 
-    public (bool becameLeader, int votes, int votesNeeded, string message) VoteLeader(IGameClient voter, IGameClient target)
+    public void VoteLeader(IGameClient voter, IGameClient target)
     {
-        if (voter == null || target == null || !voter.IsValid || !target.IsValid || !target.IsConnected)
-            return (false, 0, 0, "Invalid voter or target");
-
-        if (voter.IsFakeClient || voter.IsHltv)
-            return (false, 0, 0, "Bots/HLTV cannot vote");
-
-        var targetName = target.Name;
-        if (string.IsNullOrEmpty(targetName))
-            return (false, 0, 0, "Target name unavailable");
-
-        // get connected player count for vote threshold
-        var players = _sharedSystem?.GetEntityManager().FindPlayerControllers() ?? Enumerable.Empty<IPlayerController>();
-        var connectedCount = players.Count(p => p != null && p.IsValid() && p.IsConnected());
-
-        // if player count >= 5, need 75% votes; else only 1 vote needed
-        var votesNeeded = connectedCount >= 5 ? (int)Math.Ceiling(connectedCount * 0.75) : 1;
-
-        // if already 2 leaders and target not leader, reject immediately
-        if (connectedCount < 5 && _leaders.Count >= 2)
-            return (false, 0, votesNeeded, "Leader limit reached (max 2)");
-
-        var voterKey = voter.SteamId.ToString();
-
-        lock (_voteLock)
+        if (target == null || !target.IsValid || !target.IsConnected)
         {
-            if (!_voteMap.TryGetValue(targetName, out var voters))
+            _modsharp.PrintChannelFilter(HudPrintChannel.Chat, $"{ZombieModSharp.Prefix} Invalid voter or target for leader vote.", new RecipientFilter(voter));
+            return;
+        }
+
+        var player = _playerManager.GetOrCreatePlayer(target);
+        var voterPlayer = _playerManager.GetOrCreatePlayer(voter);
+
+        if(player.IsInfected())
+        {
+            _modsharp.PrintChannelFilter(HudPrintChannel.Chat, $"{ZombieModSharp.Prefix} You cannot vote for a zombie.", new RecipientFilter(voter));
+            return;
+        }
+
+        if(voterPlayer.IsInfected())
+        {
+            _modsharp.PrintChannelFilter(HudPrintChannel.Chat, $"{ZombieModSharp.Prefix} You cannot vote as a zombie.", new RecipientFilter(voter));
+            return;
+        }
+
+        if (IsClientLeader(target.GetPlayerController()))
+        {
+            _modsharp.PrintChannelFilter(HudPrintChannel.Chat, $"{ZombieModSharp.Prefix} Target player is already a leader.", new RecipientFilter(voter));
+            return;
+        }
+
+        if(voterPlayer.LeaderVotedTarget == target)
+        {
+            _modsharp.PrintChannelFilter(HudPrintChannel.Chat, $"{ZombieModSharp.Prefix} You have already voted {target.Name} for a leader.", new RecipientFilter(voter));
+            return;
+        }
+
+        player.LeaderVoteCount += 1;
+        voterPlayer.LeaderVotedTarget = target;
+
+        // if vote count reaches threshold, assign leader
+        var allPlayer = _playerManager.GetAllPlayers();
+        int requiredVotes = allPlayer.Count / 8;
+
+        if(requiredVotes == 0)
+            requiredVotes = 1;
+
+        _modsharp.PrintToChatAll($"{ZombieModSharp.Prefix} {voter.Name} voted {target.Name} for leader. Current votes: {player.LeaderVoteCount} / {requiredVotes}");
+
+        if (player.LeaderVoteCount >= requiredVotes)
+        {
+            var targetController = target.GetPlayerController();
+
+            if(targetController == null || !targetController.IsValid())
             {
-                voters = new HashSet<string>();
-                _voteMap[targetName] = voters;
+                _modsharp.PrintChannelFilter(HudPrintChannel.Chat, $"{ZombieModSharp.Prefix} Target player controller is invalid.", new RecipientFilter(voter));
+                return;
             }
 
-            if (!voters.Add(voterKey))
-                return (false, voters.Count, votesNeeded, "You already voted for this player");
-
-            if (voters.Count < votesNeeded)
-                return (false, voters.Count, votesNeeded, $"Vote registered {voters.Count}/{votesNeeded}");
-
-            // 已達門檻，確認 leader 上限與 controller 有效性
-            if (_leaders.Count >= 2)
+            if (AssignLeader(targetController))
             {
-                _voteMap.Remove(targetName);
-                return (false, voters.Count, votesNeeded, "Leader limit reached (max 2)");
+                _modsharp.PrintToChatAll($"{ZombieModSharp.Prefix} {target.Name} has been assigned as a leader!");
+                player.LeaderVoteCount = 0; // reset vote count after becoming leader
+                allPlayer.Where(p => p.Value.LeaderVotedTarget == target).ToList().ForEach(p => p.Value.LeaderVotedTarget = null); // reset votes for this target
             }
-
-            var controller = target.GetPlayerController();
-            if (controller == null || !controller.IsValid())
-            {
-                _voteMap.Remove(targetName);
-                return (false, voters.Count, votesNeeded, "Target controller invalid");
-            }
-
-            var assigned = AssignLeader(controller);
-
-            // 非關鍵操作：設定 clan tag、更新 tag、嘗試 glow、廣播；錯誤不會中斷流程
-            try { controller.SetClanTag(" [Leader]  "); UpdateClientClanTags(); } catch { }
-            try
-            {
-                var pawn = controller.GetPlayerPawn();
-                if (pawn != null && pawn.IsValid())
-                {
-                    var mode = IGlowServices.GlowVisibleMode.ExceptTarget;
-                    _glowMethod.CreateGlow(target, pawn, new Color32(0, 255, 0, 255), 5000, mode);
-                }
-            }
-            catch { }
-
-            _voteMap.Remove(targetName);
-
-            return (assigned, 0, votesNeeded, "Leader assigned");
         }
     }
 

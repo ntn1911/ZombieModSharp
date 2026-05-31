@@ -19,6 +19,6 @@ namespace ZombieModSharp.Abstractions
 
         public void UpdateClientClanTags();
 
-        public (bool becameLeader, int votes, int votesNeeded, string message) VoteLeader(IGameClient voter, IGameClient target);
+        public void VoteLeader(IGameClient voter, IGameClient target);
     }
 }

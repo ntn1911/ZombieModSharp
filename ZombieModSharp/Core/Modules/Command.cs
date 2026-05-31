@@ -114,17 +114,7 @@ public class Command : ICommand
             return;
         }
 
-        var result = _leaderServices.VoteLeader(client, target);
-
-        if (result.becameLeader)
-        {
-            var leadersNow = _leaderServices.GetAllLeaders().Count();
-            _modsharp.PrintToChatAll($"{target.Name} is became a new leader [{leadersNow}/2]");
-        }
-        else
-        {
-            ReplyToCommand(client, result.message);
-        }
+        _leaderServices.VoteLeader(client, target);
     }
     public void OnGlowCommand(IGameClient? client, StringCommand command)
     {
