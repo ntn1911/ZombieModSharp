@@ -186,6 +186,7 @@ public class Events : IEvents
     {
         RoundEnded = true;
         // _modSharp.PrintChannelAll(HudPrintChannel.Chat, $"The round just ended");
+        RespawnServices.SetRespawnEnable(false);
         _infect.OnRoundEnd();
     }
 
@@ -206,6 +207,13 @@ public class Events : IEvents
         // ignore Spec and none team
         if (client == null)
             return;
+
+        var playerPawn = pawn?.GetPlayerPawn();
+
+        if(playerPawn == null)
+            return;
+
+        playerPawn.AllowTakesDamage = false;
 
         var team = pawn?.Team ?? CStrikeTeam.UnAssigned;
 
