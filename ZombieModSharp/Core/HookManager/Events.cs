@@ -186,6 +186,7 @@ public class Events : IEvents
     {
         RoundEnded = true;
         // _modSharp.PrintChannelAll(HudPrintChannel.Chat, $"The round just ended");
+        RespawnServices.SetRespawnEnable(false);
         _infect.OnRoundEnd();
     }
 
