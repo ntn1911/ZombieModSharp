@@ -111,6 +111,8 @@ public class Infect : IInfect
             _logger.LogError("The client controller is null!");
             return;
         }
+
+        pawn.AllowTakesDamage = true;
         
         _soundServices.EmitZombieSound(pawn, "zr.amb.scream");
         _modSharp.PrintChannelFilter(HudPrintChannel.Chat, $"{ZombieModSharp.Prefix} You have been infected! Go pass it on to as many other players as you can.", new RecipientFilter(client));
@@ -217,6 +219,8 @@ public class Infect : IInfect
             _logger.LogError("The client controller is null!");
             return;
         }
+
+        pawn.AllowTakesDamage = true;
 
         _playerClasses.ApplyPlayerClassAttribute(pawn, zmPlayer.HumanClass!);
     }

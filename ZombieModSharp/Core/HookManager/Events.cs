@@ -207,6 +207,13 @@ public class Events : IEvents
         if (client == null)
             return;
 
+        var playerPawn = pawn?.GetPlayerPawn();
+
+        if(playerPawn == null)
+            return;
+
+        playerPawn.AllowTakesDamage = false;
+
         var team = pawn?.Team ?? CStrikeTeam.UnAssigned;
 
         if (team == CStrikeTeam.UnAssigned || team == CStrikeTeam.Spectator)
