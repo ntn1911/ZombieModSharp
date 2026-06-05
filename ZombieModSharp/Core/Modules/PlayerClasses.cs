@@ -239,10 +239,24 @@ public class PlayerClasses : IPlayerClasses
                 var currentHealth = playerPawn.Health;
                 var maxHealth = classAttribute.Health;
 
+                // current health is less than max health, we can regen.
                 if (currentHealth < maxHealth)
                 {
-                    var newHealth = Math.Min(currentHealth + classAttribute.HealthRegen, maxHealth);
+                    var newHealth = currentHealth + classAttribute.HealthRegen;
+
+                    // make sure we don't overheal the player.
+                    if (newHealth > maxHealth)
+                    {
+                        newHealth = maxHealth;
+                    }
+
                     playerPawn.Health = newHealth;
+                }
+
+                else
+                {
+                    // stop the timer if player is at full health.
+                    return TimerAction.Continue;
                 }
 
                 return TimerAction.Continue;
