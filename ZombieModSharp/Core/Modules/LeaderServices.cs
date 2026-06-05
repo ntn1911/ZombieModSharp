@@ -17,13 +17,87 @@ public class LeaderServices : ILeaderServices
     private ILogger<LeaderServices> _logger;
     private readonly IGlowServices _glowMethod;
     private readonly IGameEventManager _gameEventManager;
+    private readonly IPlayerManager _playerManager;
+    private readonly IModSharp _modsharp;
 
-    public LeaderServices(ISharedSystem sharedSystem, ILogger<LeaderServices> logger, IGlowServices glowMethod, IGameEventManager gameEventManager)
+    //Vote logics for leader side
+    private readonly Dictionary<string, HashSet<string>> _voteMap = new();
+    private readonly object _voteLock = new();
+
+    public LeaderServices(ISharedSystem sharedSystem, ILogger<LeaderServices> logger, IGlowServices glowMethod, IGameEventManager gameEventManager, IPlayerManager playerManager)
     {
         _sharedSystem = sharedSystem;
         _logger = logger;
         _glowMethod = glowMethod;
         _gameEventManager = gameEventManager;
+        _playerManager = playerManager;
+        _modsharp = _sharedSystem.GetModSharp();
+    }
+
+    public void VoteLeader(IGameClient voter, IGameClient target)
+    {
+        if (target == null || !target.IsValid || !target.IsConnected)
+        {
+            _modsharp.PrintChannelFilter(HudPrintChannel.Chat, $"{ZombieModSharp.Prefix} Invalid voter or target for leader vote.", new RecipientFilter(voter));
+            return;
+        }
+
+        var player = _playerManager.GetOrCreatePlayer(target);
+        var voterPlayer = _playerManager.GetOrCreatePlayer(voter);
+
+        if(player.IsInfected())
+        {
+            _modsharp.PrintChannelFilter(HudPrintChannel.Chat, $"{ZombieModSharp.Prefix} You cannot vote for a zombie.", new RecipientFilter(voter));
+            return;
+        }
+
+        if(voterPlayer.IsInfected())
+        {
+            _modsharp.PrintChannelFilter(HudPrintChannel.Chat, $"{ZombieModSharp.Prefix} You cannot vote as a zombie.", new RecipientFilter(voter));
+            return;
+        }
+
+        if (IsClientLeader(target.GetPlayerController()))
+        {
+            _modsharp.PrintChannelFilter(HudPrintChannel.Chat, $"{ZombieModSharp.Prefix} Target player is already a leader.", new RecipientFilter(voter));
+            return;
+        }
+
+        if(voterPlayer.LeaderVotedTarget == target)
+        {
+            _modsharp.PrintChannelFilter(HudPrintChannel.Chat, $"{ZombieModSharp.Prefix} You have already voted {target.Name} for a leader.", new RecipientFilter(voter));
+            return;
+        }
+
+        player.LeaderVoteCount += 1;
+        voterPlayer.LeaderVotedTarget = target;
+
+        // if vote count reaches threshold, assign leader
+        var allPlayer = _playerManager.GetAllPlayers();
+        int requiredVotes = allPlayer.Count / 8;
+
+        if(requiredVotes == 0)
+            requiredVotes = 1;
+
+        _modsharp.PrintToChatAll($"{ZombieModSharp.Prefix} {voter.Name} voted {target.Name} for leader. Current votes: {player.LeaderVoteCount} / {requiredVotes}");
+
+        if (player.LeaderVoteCount >= requiredVotes)
+        {
+            var targetController = target.GetPlayerController();
+
+            if(targetController == null || !targetController.IsValid())
+            {
+                _modsharp.PrintChannelFilter(HudPrintChannel.Chat, $"{ZombieModSharp.Prefix} Target player controller is invalid.", new RecipientFilter(voter));
+                return;
+            }
+
+            if (AssignLeader(targetController))
+            {
+                _modsharp.PrintToChatAll($"{ZombieModSharp.Prefix} {target.Name} has been assigned as a leader!");
+                player.LeaderVoteCount = 0; // reset vote count after becoming leader
+                allPlayer.Where(p => p.Value.LeaderVotedTarget == target).ToList().ForEach(p => p.Value.LeaderVotedTarget = null); // reset votes for this target
+            }
+        }
     }
 
     public bool AssignLeader(IPlayerController controller)

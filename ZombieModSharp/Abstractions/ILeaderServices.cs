@@ -1,5 +1,6 @@
 ﻿using Sharp.Shared;
 using Sharp.Shared.GameEntities;
+using Sharp.Shared.Objects;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -17,5 +18,7 @@ namespace ZombieModSharp.Abstractions
         public void ReloadLeaderList(ISharedSystem sharedSystem);
 
         public void UpdateClientClanTags();
+
+        public void VoteLeader(IGameClient voter, IGameClient target);
     }
 }
