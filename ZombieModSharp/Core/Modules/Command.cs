@@ -59,6 +59,10 @@ public class Command : ICommand
         _command.RegisterClientCommand("zsound", ZSoundCommand);
 
         _command.RegisterClientCommand("zclass", ZClassCommand);
+        _command.RegisterClientCommand("kev", KevlarCommand);
+        _command.RegisterClientCommand("kevlar", KevlarCommand);
+
+        _command.RegisterClientCommand("zspawn", ZSpawnCommand);
     }
 
     public void RegisterAdminCommand()
@@ -79,6 +83,46 @@ public class Command : ICommand
         _adminManager?.RegisterAdminCommand("disglow", OnDisableGlowCommand, ["admin:slay"]);
     }
 
+    private void KevlarCommand(IGameClient? client, StringCommand command)
+    {
+        if (client == null || !client.IsValid) return;
+
+        var controller = client.GetPlayerController();
+        if (controller == null || !controller.IsValid())
+        {
+            ReplyToCommand(client, "Can't find any player controller");
+            return;
+        }
+
+        var pawn = controller.GetPlayerPawn();
+        if (pawn == null || !pawn.IsValid())
+        {
+            ReplyToCommand(client, "Can't find any player pawn");
+            return;
+        }
+
+        if(!pawn.IsAlive)
+        {
+            ReplyToCommand(client, "You need to be alive to use this command!");
+            return;
+        }
+
+        if(_infect.IsClientInfect(client))
+        {
+            ReplyToCommand(client, "Zombies can't buy kevlar!");
+            return;
+        }
+
+        if(pawn.ArmorValue >= 100)
+        {
+            ReplyToCommand(client, "You already have full kevlar!");
+            return;
+        }
+
+        pawn.ArmorValue = 100;
+        ReplyToCommand(client, "You have purchased kevlar. Use this command again to purchase if you don't have one.");
+        controller.GetInGameMoneyService()?.Account -= 1000;
+    }
 
     public void OnGlowCommand(IGameClient? client, StringCommand command)
     {
@@ -463,6 +507,46 @@ public class Command : ICommand
 
         player.AllowExtraGrenade = !player.AllowExtraGrenade;
         ReplyToCommand(client, $"AllowExtraGrenade: {player.AllowExtraGrenade}");
+    }
+
+    private void ZSpawnCommand(IGameClient? client, StringCommand command)
+    {
+        if (client == null || !client.IsValid) return;
+
+        var controller = client.GetPlayerController();
+        if (controller == null || !controller.IsValid())
+        {
+            ReplyToCommand(client, "Can't find any player controller");
+            return;
+        }
+
+        if(controller.Team == CStrikeTeam.Spectator || controller.Team == CStrikeTeam.UnAssigned)
+         {
+            ReplyToCommand(client, "You can't use this command in spectator!");
+            return;
+        }
+
+        var pawn = controller.GetPlayerPawn();
+
+        if (pawn == null || !pawn.IsValid())
+        {
+            ReplyToCommand(client, "Can't find any player pawn");
+            return;
+        }
+
+        if(pawn.IsAlive)
+        {
+            ReplyToCommand(client, "You need to be dead to use this command!");
+            return;
+        }
+
+        if(!RespawnServices.IsRespawnEnabled())
+        {
+            ReplyToCommand(client, "Respawn has been disabled.");
+            return;
+        }
+
+        controller.Respawn();
     }
 
     public void ReplyToCommand(IGameClient? client, string text)
