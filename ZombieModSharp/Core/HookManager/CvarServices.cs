@@ -58,6 +58,11 @@ public class CvarServices : ICvarServices
         _conVarManager.InstallChangeHook(CvarList["Cvar_InfectKnockbackScale"]!, OnConVarChange);
         _conVarManager.InstallChangeHook(CvarList["Cvar_RespawnEnabled"]!, OnConVarChange);
         _conVarManager.InstallChangeHook(CvarList["Cvar_InfectDamageCash"]!, OnConVarChange);
+        var ShakeHead = _conVarManager.FindConVar("mp_flinch_punch_scale", true);
+        if (ShakeHead != null)
+        {
+            ShakeHead.Set(0);
+        }
 
         AutoExecConfigFile();
     }
