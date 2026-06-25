@@ -324,7 +324,7 @@ public class Command : ICommand
     {
         if (command.ArgCount < 1)
         {
-            ReplyToCommand(client, "Usage: ms_leader <target>");
+            ReplyToCommand(client, "Usage: ms_removeleader <target>");
             return;
         }
 
