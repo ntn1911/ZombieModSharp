@@ -81,7 +81,7 @@ public class Command : ICommand
         _adminManager?.RegisterAdminCommand("dm", OnDisableMarkerCommand, ["admin:slay"]);
         _adminManager?.RegisterAdminCommand("glow", OnGlowCommand, ["admin:slay"]);
         _adminManager?.RegisterAdminCommand("disglow", OnDisableGlowCommand, ["admin:slay"]);
-        
+        _adminManager?.RegisterAdminCommand("testmode", OnTestModeCommand, ["admin:slay"]);
     }
 
     private void KevlarCommand(IGameClient? client, StringCommand command)
@@ -413,6 +413,12 @@ public class Command : ICommand
             return;
         }
 
+        if (_infect.IsTestMode())
+        {
+            ReplyToCommand(client, "The infection during the test mode is not available.");
+            return;
+        }
+
         var arg = command.GetArg(1);
         var target = GetTargets(client, arg);
 
@@ -583,6 +589,30 @@ public class Command : ICommand
         }
 
         controller.Respawn();
+    }
+
+    private void OnTestModeCommand(IGameClient? client, StringCommand command)
+    {
+        if (command.ArgCount < 1)
+        {
+            ReplyToCommand(client, "Usage: testmode <0-1>");
+            return;
+        }
+
+        if (!int.TryParse(command.GetArg(1), out var arg))
+        {
+            ReplyToCommand(client, "Usage: testmode <0-1>");
+            return;
+        }
+
+        if (arg > 1 || arg < 0)
+        {
+            ReplyToCommand(client, "Usage: testmode <0-1>");
+            return;
+        }
+
+        _infect.SetTestMode(arg == 1);
+        ReplyToCommand(client, $"Admin {client?.Name} has{(arg == 1 ? "\x05 Enabled" : "\x07 Disabled")} \x01Test mode.");
     }
 
     public void ReplyToCommand(IGameClient? client, string text)

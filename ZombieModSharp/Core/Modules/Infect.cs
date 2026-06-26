@@ -38,6 +38,8 @@ public class Infect : IInfect
     public event DelegateInfectPlayer? OnClientInfect;
     public event DelegateHumanizeClient? OnClientHumanize;
 
+    private bool _testMode = false;
+
     public Infect(ISharedSystem sharedSystem, ILogger<Infect> logger, IPlayerManager player, IPlayerClasses playerClasses, ICvarServices cvarServices, ISoundServices soundServices, IZTele zTele, ILeaderServices leaderServices, IGlowServices glowServices)
     {
         _sharedSystem = sharedSystem;
@@ -60,6 +62,12 @@ public class Infect : IInfect
     {
         if (client == null)
         {
+            return;
+        }
+
+        if(IsTestMode() && !force)
+        {
+            _modSharp.PrintChannelFilter(HudPrintChannel.Chat, $"{ZombieModSharp.Prefix} Infection is skipped because test mode is enabled.", new RecipientFilter(client));
             return;
         }
 
@@ -341,6 +349,12 @@ public class Infect : IInfect
         {
             return;
         }
+
+        if (IsTestMode())
+        {
+            return;
+        }
+
         var allClient = _clientManager.GetGameClients();
 
         int ctCount = 0;
@@ -485,6 +499,12 @@ public class Infect : IInfect
 
     private void InfectMotherZombie()
     {
+        if(IsTestMode())
+        {
+            _modSharp.PrintChannelAll(HudPrintChannel.Chat, $"{ZombieModSharp.Prefix} Mother Zombie infection is skipped because test mode is enabled.");
+            return;
+        }
+
         // Get All Player with motherzombie status, and alive.
         var candidate = _player.GetAllPlayers().Where(p => p.Value.MotherZombieStatus == MotherZombieStatus.None
             && (p.Key.GetPlayerController()?.GetPlayerPawn()?.IsAlive ?? false) && p.Value.MotherZombieImmune == false);
@@ -597,5 +617,15 @@ public class Infect : IInfect
     public void SetInfectStarted(bool result)
     {
         InfectStarted = result;
+    }
+
+    public void SetTestMode(bool result)
+    {
+        _testMode = result;
+    }
+
+    public bool IsTestMode()
+    {
+        return _testMode;
     }
 }

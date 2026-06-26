@@ -93,6 +93,11 @@ public class Events : IEvents
 
         if (zmClient.IsHuman() && zmAttacker.IsInfected())
         {
+            if(_infect.IsTestMode())
+            {      
+                return;
+            }
+
             if (weapon.Contains("knife"))
             {
                 // Infect the player.
@@ -232,21 +237,28 @@ public class Events : IEvents
 
             if (_infect.IsInfectStarted())
             {
-                if(teamRespawn == 0)
-                    _infect.InfectPlayer(client);
-
-                else if(teamRespawn == 1)
-                    _infect.HumanizeClient(client);
-
-                else
+                if(!_infect.IsTestMode())
                 {
-                    var zombie = player.IsInfected();
-
-                    if(zombie)
+                    if(teamRespawn == 0)
                         _infect.InfectPlayer(client);
 
-                    else
+                    else if(teamRespawn == 1)
                         _infect.HumanizeClient(client);
+
+                    else
+                    {
+                        var zombie = player.IsInfected();
+
+                        if(zombie)
+                            _infect.InfectPlayer(client);
+
+                        else
+                            _infect.HumanizeClient(client);
+                    }
+                }
+                else
+                {
+                    _infect.HumanizeClient(client);
                 }
             }
             // regardless of wtf happenned here, before infection start all player should be spawn as human.
