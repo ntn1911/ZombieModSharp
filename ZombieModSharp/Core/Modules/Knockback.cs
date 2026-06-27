@@ -94,5 +94,7 @@ public class Knockback : IKnockback
             KnockbackScale = 1.0f;
             return;
         }
+
+        KnockbackScale = scale;
     }
 }
