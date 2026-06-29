@@ -16,6 +16,8 @@ public class Knockback : IKnockback
     private readonly IModSharp _modsharp;
 
     private float KnockbackScale = 1.0f;
+    private float DynamicKnockbackScale = 1.0f;
+    private float KnockbackJumpScale = 1.0f;
 
     public Knockback(ISharedSystem sharedSystem, ILogger<Knockback> logger, IPlayerManager player, IWeapons weapons, IHitGroup hitGroup)
     {
@@ -75,7 +77,7 @@ public class Knockback : IKnockback
 
         // _modsharp.PrintToChatAll($"KB data: {weaponknockback:F2} | {hitgroupsKnockback:F2} | {classKnockback:F2}");
 
-        var pushVelocity = foward * damage * classKnockback * weaponknockback * hitgroupsKnockback * KnockbackScale;
+        var pushVelocity = foward * damage * classKnockback * weaponknockback * hitgroupsKnockback * KnockbackScale * DynamicKnockbackScale;
         // _modsharp.PrintToChatAll($"Push Velocity: {pushVelocity}");
 
         var playerPawn = client.GetPlayerController()?.GetPlayerPawn();
@@ -83,11 +85,38 @@ public class Knockback : IKnockback
         if (playerPawn == null)
             return;
 
-        var veloCity = playerPawn.GetAbsVelocity();
-        playerPawn.Teleport(null, null, veloCity + pushVelocity);
+        if(playerPawn.GroundEntity == null)
+        {
+            _modsharp.PrintToChatAll($"Player {client.Name} is in air, apply jump knockback scale.");
+            pushVelocity *= KnockbackJumpScale;
+        }
+
+        playerPawn.ApplyAbsVelocityImpulse(pushVelocity);
     }
 
     public void SetKnockbackScale(float scale)
+    {
+        if(scale < 0)
+        {
+            KnockbackScale = 1.0f;
+            return;
+        }
+
+        KnockbackScale = scale;
+    }
+
+    public void SetDynamicKnockbackScale(float scale)
+    {
+        if(scale < 0)
+        {
+            KnockbackScale = 1.0f;
+            return;
+        }
+
+        KnockbackScale = scale;
+    }
+
+    public void SetJumpKnockbackScale(float scale)
     {
         if(scale < 0)
         {
