@@ -85,7 +85,7 @@ public class CvarServices : ICvarServices
         {
             var scale = convar.GetFloat();
             _knockback.SetKnockbackScale(scale);
-            _modsharp.PrintToChatAll($"ConVar: zms_infect_knockback_scale set to {scale}");
+            //_modsharp.PrintToChatAll($"ConVar: zms_infect_knockback_scale set to {scale}");
             _logger.LogInformation("Scale is set to {scale}", scale);
         }
 
@@ -93,7 +93,7 @@ public class CvarServices : ICvarServices
         {
             var scale = convar.GetFloat();
             _knockback.SetJumpKnockbackScale(scale);
-            _modsharp.PrintToChatAll($"ConVar: zms_infect_knockback_jump_scale set to {scale}");
+            //_modsharp.PrintToChatAll($"ConVar: zms_infect_knockback_jump_scale set to {scale}");
             _logger.LogInformation("Jump Scale is set to {scale}", scale);
         }
 

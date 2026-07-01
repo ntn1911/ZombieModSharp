@@ -75,10 +75,9 @@ public class Knockback : IKnockback
         var weaponknockback = _weapons.GetWeaponKnockback(weapon);
         var hitgroupsKnockback = _hitgroup.GetHitgroupKnockback(hitGroup);
 
-        // _modsharp.PrintToChatAll($"KB data: {weaponknockback:F2} | {hitgroupsKnockback:F2} | {classKnockback:F2}");
+        // _modsharp.PrintToChatAll($"KB data: {weaponknockback:F2} | {hitgroupsKnockback:F2} | {classKnockback:F2} | {KnockbackScale:F2} | {DynamicKnockbackScale:F2} | {KnockbackJumpScale:F2}");
 
         var pushVelocity = foward * damage * classKnockback * weaponknockback * hitgroupsKnockback * KnockbackScale * DynamicKnockbackScale;
-        // _modsharp.PrintToChatAll($"Push Velocity: {pushVelocity}");
 
         var playerPawn = client.GetPlayerController()?.GetPlayerPawn();
 
@@ -108,21 +107,21 @@ public class Knockback : IKnockback
     {
         if(scale < 0)
         {
-            KnockbackScale = 1.0f;
+            DynamicKnockbackScale = 1.0f;
             return;
         }
 
-        KnockbackScale = scale;
+        DynamicKnockbackScale = scale;
     }
 
     public void SetJumpKnockbackScale(float scale)
     {
         if(scale < 0)
         {
-            KnockbackScale = 1.0f;
+            KnockbackJumpScale = 1.0f;
             return;
         }
 
-        KnockbackScale = scale;
+        KnockbackJumpScale = scale;
     }
 }
