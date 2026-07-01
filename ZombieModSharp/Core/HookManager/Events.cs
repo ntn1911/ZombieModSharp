@@ -29,11 +29,13 @@ public class Events : IEvents
     private readonly IRespawnServices _respawnServices;
     private readonly IGlowServices _glowServices;
     private readonly ILeaderServices _LeaderServices;
+    private readonly IConVarManager _convarManager;
 
     public int ListenerVersion => IEventListener.ApiVersion;
     public int ListenerPriority => 0;
 
     public bool RoundEnded { get; private set; } = false;
+    private Guid _roundTimer = Guid.Empty;
 
     public Events(ISharedSystem sharedSystem, IGameEventManager gameEventManager, ILogger<Events> logger, IPlayerManager playerManager, IInfect infect, IZTele ztele, IKnockback knockback, ICvarServices cvarServices, ISoundServices soundServices, IRespawnServices respawnServices, IGlowServices glowMethod, ILeaderServices leaderServices)
     {
@@ -50,6 +52,7 @@ public class Events : IEvents
         _respawnServices = respawnServices;
         _glowServices = glowMethod;
         _LeaderServices = leaderServices;
+        _convarManager = _sharedSystem.GetConVarManager();
     }
 
     public void Init()
@@ -172,6 +175,11 @@ public class Events : IEvents
         // start infection.
         // _modSharp.PrintChannelAll(HudPrintChannel.Chat, "Infect round freeze is called");
         _infect.OnRoundFreezeEnd();
+        var timer = _convarManager.FindConVar("mp_roundtime")?.GetFloat() ?? 15.0f;
+        _roundTimer = _modSharp.PushTimer(() =>
+        {
+            _modSharp.GetGameRules().TerminateRound(8.0f, RoundEndReason.RoundDraw, true);
+        }, timer * 60.0f, GameTimerFlags.StopOnRoundEnd|GameTimerFlags.StopOnMapEnd);
     }
 
     private void OnRoundStart(IGameEvent e)
@@ -179,6 +187,12 @@ public class Events : IEvents
         RoundEnded = false;
         //_modSharp.PrintChannelAll(HudPrintChannel.Chat, $"The round just started");
         _infect.OnRoundStart();
+
+        if(_roundTimer != Guid.Empty)
+        {
+            _modSharp.StopTimer(_roundTimer);
+            _roundTimer = Guid.Empty;
+        }
 
         if(_cvarServices.CvarList["Cvar_RespawnEnabled"]?.GetBool() ?? false)
             RespawnServices.SetRespawnEnable(true);
@@ -193,6 +207,12 @@ public class Events : IEvents
         // _modSharp.PrintChannelAll(HudPrintChannel.Chat, $"The round just ended");
         RespawnServices.SetRespawnEnable(false);
         _infect.OnRoundEnd();
+
+        if(_roundTimer != Guid.Empty)
+        {
+            _modSharp.StopTimer(_roundTimer);
+            _roundTimer = Guid.Empty;
+        }
     }
 
     private void OnWarmupEnd(IGameEvent e)

@@ -87,7 +87,6 @@ public class Knockback : IKnockback
 
         if(playerPawn.GroundEntity == null)
         {
-            _modsharp.PrintToChatAll($"Player {client.Name} is in air, apply jump knockback scale.");
             pushVelocity *= KnockbackJumpScale;
         }
 
