@@ -56,7 +56,6 @@ public class Hooks : IHooks
 
     private HookReturnValue<float> OnGetMaxSpeed(IPlayerGetMaxSpeedHookParams param, HookReturnValue<float> result)
     {
-        /*
         var client = param.Controller.GetGameClient();
 
         if(client == null)
@@ -68,7 +67,6 @@ public class Hooks : IHooks
         {
             return new HookReturnValue<float>(EHookAction.SkipCallReturnOverride, player.ActiveClass.Speed);
         }
-        */
 
         return result;
     }
