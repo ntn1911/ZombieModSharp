@@ -6,4 +6,6 @@ public interface IKnockback
 {
     public void KnockbackClient(IGameClient client, IGameClient attacker, string weapon, float damage, int hitGroup);
     public void SetKnockbackScale(float scale);
+    void SetJumpKnockbackScale(float scale);
+    void SetDynamicKnockbackScale(float scale);
 }
