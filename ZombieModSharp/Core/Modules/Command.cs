@@ -597,7 +597,7 @@ public class Command : ICommand
             return;
         }
 
-        var cost = _cvarServices.CvarList["Cvar_ZAmmoCost"]?.GetInt() ?? 7500;
+        var cost = _cvarServices.CvarList["Cvar_ZAmmoCost"]?.GetInt32() ?? 7500;
         var duration = _cvarServices.CvarList["Cvar_ZAmmoDuration"]?.GetFloat() ?? 15.0f;
         var money = controller.GetInGameMoneyService()?.Account;
 
