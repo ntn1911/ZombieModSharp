@@ -16,6 +16,8 @@ public class Knockback : IKnockback
     private readonly IModSharp _modsharp;
 
     private float KnockbackScale = 1.0f;
+    private float DynamicKnockbackScale = 1.0f;
+    private float KnockbackJumpScale = 1.0f;
 
     public Knockback(ISharedSystem sharedSystem, ILogger<Knockback> logger, IPlayerManager player, IWeapons weapons, IHitGroup hitGroup)
     {
@@ -73,18 +75,21 @@ public class Knockback : IKnockback
         var weaponknockback = _weapons.GetWeaponKnockback(weapon);
         var hitgroupsKnockback = _hitgroup.GetHitgroupKnockback(hitGroup);
 
-        // _modsharp.PrintToChatAll($"KB data: {weaponknockback:F2} | {hitgroupsKnockback:F2} | {classKnockback:F2}");
+        // _modsharp.PrintToChatAll($"KB data: {weaponknockback:F2} | {hitgroupsKnockback:F2} | {classKnockback:F2} | {KnockbackScale:F2} | {DynamicKnockbackScale:F2} | {KnockbackJumpScale:F2}");
 
-        var pushVelocity = foward * damage * classKnockback * weaponknockback * hitgroupsKnockback * KnockbackScale;
-        // _modsharp.PrintToChatAll($"Push Velocity: {pushVelocity}");
+        var pushVelocity = foward * damage * classKnockback * weaponknockback * hitgroupsKnockback * KnockbackScale * DynamicKnockbackScale;
 
         var playerPawn = client.GetPlayerController()?.GetPlayerPawn();
 
         if (playerPawn == null)
             return;
 
-        var veloCity = playerPawn.GetAbsVelocity();
-        playerPawn.Teleport(null, null, veloCity + pushVelocity);
+        if(playerPawn.GroundEntity == null)
+        {
+            pushVelocity *= KnockbackJumpScale;
+        }
+
+        playerPawn.ApplyAbsVelocityImpulse(pushVelocity);
     }
 
     public void SetKnockbackScale(float scale)
@@ -94,5 +99,29 @@ public class Knockback : IKnockback
             KnockbackScale = 1.0f;
             return;
         }
+
+        KnockbackScale = scale;
+    }
+
+    public void SetDynamicKnockbackScale(float scale)
+    {
+        if(scale < 0)
+        {
+            DynamicKnockbackScale = 1.0f;
+            return;
+        }
+
+        DynamicKnockbackScale = scale;
+    }
+
+    public void SetJumpKnockbackScale(float scale)
+    {
+        if(scale < 0)
+        {
+            KnockbackJumpScale = 1.0f;
+            return;
+        }
+
+        KnockbackJumpScale = scale;
     }
 }

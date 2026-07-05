@@ -112,7 +112,8 @@ public class Hooks : IHooks
         var attacker = _entityManager.FindEntityByHandle(param.AttackerPawnHandle)?.GetOriginalController()?.GetGameClient();
 
         var client = param.Controller.GetGameClient();
-        var victimPawn = param.Controller.GetPlayerPawn();
+        var victimPawn = param.Controller.AsPlayerPawn();
+
         if (attacker == null || client == null)
         {
             return result;
@@ -134,7 +135,7 @@ public class Hooks : IHooks
             if(inflictor?.Classname.Contains("inferno") ?? false )
             {
                 var owner = inflictor.OwnerEntity;
-                if(owner?.AsPlayerPawn() == victimPawn)
+                if(owner?.AsPlayerPawn() == victimPawn && (victimPawn?.IsValid() ?? false))
                 {
                     //_modsharp.PrintToChatAll($"Prevent self ignite for player {client.Name}");
                     return new HookReturnValue<long>(EHookAction.SkipCallReturnOverride, 0);
@@ -145,6 +146,7 @@ public class Hooks : IHooks
         if(attackerPlayer.IsHuman() && victimPlayer.IsInfected())
         {
             var inflictor = _entityManager.FindEntityByHandle(param.InflictorHandle);
+            // _modsharp.PrintToChatAll($"Player {client.Name} has been tased by {inflictor?.Classname}");
             if(inflictor?.Classname.Contains("hegrenade") ?? false)
             {
                 var duration = victimPlayer.ActiveClass?.NapalmDuration ?? 0.0f;
@@ -153,6 +155,12 @@ public class Hooks : IHooks
                 {
                     _grenadeEffect.IgnitePawn(param.Pawn, (int)param.Damage, duration);
                 }
+            }
+
+            if(inflictor?.AsPlayerPawn()?.GetActiveWeapon()?.Classname.Contains("taser") ?? false)
+            {
+                // _modsharp.PrintToChatAll($"Player {client.Name} has been tased by {attacker.Name}");
+                param.Damage = 5000;
             }
         }
 

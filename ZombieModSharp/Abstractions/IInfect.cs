@@ -12,4 +12,6 @@ public interface IInfect : IInfectShared
     public void CheckGameStatus();
     public bool IsInfectStarted();
     public void SetInfectStarted(bool result);
+    public void SetTestMode(bool result);
+    public bool IsTestMode();
 }

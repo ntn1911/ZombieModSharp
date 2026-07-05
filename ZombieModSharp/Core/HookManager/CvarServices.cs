@@ -40,6 +40,9 @@ public class CvarServices : ICvarServices
         CvarList["Cvar_InfectNoblockEnable"] =  _conVarManager.CreateConVar("zms_infect_noblock_enable", true, "Enable noblock between player or not.", ConVarFlags.Release);
         CvarList["Cvar_InfectMotherZombieSpawn"] = _conVarManager.CreateConVar("zms_infect_motherzombie_spawn", true, "Teleport motherzombie back to spawn.", ConVarFlags.Release);
         CvarList["Cvar_InfectKnockbackScale"] = _conVarManager.CreateConVar("zms_infect_knockback_scale", 1.0f, 0.01f, 100.0f, "Knockback scale for modifying", ConVarFlags.Release);
+        CvarList["Cvar_InfectKnockbackJumpScale"] = _conVarManager.CreateConVar("zms_infect_knockback_jump_scale", 1.8f, 0.01f, 100.0f, "Knockback jump scale for modifying", ConVarFlags.Release);
+        CvarList["Cvar_InfectKnockbackDynamicScaleMaxZombie"] = _conVarManager.CreateConVar("zms_infect_knockback_dynamic_scale_max_zombie", 63, 1, 64, "Number of zombie to reach maximum dynamic scale", ConVarFlags.Release);
+        CvarList["Cvar_InfectKnockbackDynamicScale"] = _conVarManager.CreateConVar("zms_infect_knockback_dynamic_scale", 1.48f, 1.0f, 2.0f, "Set more than 1.0 will enable dynamic knockback scale based on how many human left.", ConVarFlags.Release);
         CvarList["Cvar_InfectWarmupEnabled"] = _conVarManager.CreateConVar("zms_infect_warmup_enabled", false, "Enable infection game during warmup or not", ConVarFlags.Release);
         CvarList["Cvar_InfectDamageCash"] = _conVarManager.CreateConVar("zms_infect_damage_cash", 1.0f, 0.0f, 100.0f, "Multiplier cash that will receive when damage the zombie.", ConVarFlags.Release);
         CvarList["Cvar_InfectHumanWinOverlay"] = _conVarManager.CreateConVar("zms_infect_human_win_overlay", "particles/oylsister/human_overlay.vpcf", "Overlay image path for human win in infection mode.", ConVarFlags.Release);
@@ -60,6 +63,7 @@ public class CvarServices : ICvarServices
         // we check if covar existed or not.
         
         _conVarManager.InstallChangeHook(CvarList["Cvar_InfectKnockbackScale"]!, OnConVarChange);
+        _conVarManager.InstallChangeHook(CvarList["Cvar_InfectKnockbackJumpScale"]!, OnConVarChange);
         _conVarManager.InstallChangeHook(CvarList["Cvar_RespawnEnabled"]!, OnConVarChange);
         _conVarManager.InstallChangeHook(CvarList["Cvar_InfectDamageCash"]!, OnConVarChange);
         var ShakeHead = _conVarManager.FindConVar("mp_flinch_punch_scale", true);
@@ -74,6 +78,7 @@ public class CvarServices : ICvarServices
     public void Shutdown()
     {
         _conVarManager.RemoveChangeHook(CvarList["Cvar_InfectKnockbackScale"]!, OnConVarChange);
+        _conVarManager.RemoveChangeHook(CvarList["Cvar_InfectKnockbackJumpScale"]!, OnConVarChange);
         _conVarManager.RemoveChangeHook(CvarList["Cvar_RespawnEnabled"]!, OnConVarChange);
         _conVarManager.RemoveChangeHook(CvarList["Cvar_InfectDamageCash"]!, OnConVarChange);
     }
@@ -84,8 +89,16 @@ public class CvarServices : ICvarServices
         {
             var scale = convar.GetFloat();
             _knockback.SetKnockbackScale(scale);
-            _modsharp.PrintToChatAll($"ConVar: zms_infect_knockback_scale set to {scale}");
+            //_modsharp.PrintToChatAll($"ConVar: zms_infect_knockback_scale set to {scale}");
             _logger.LogInformation("Scale is set to {scale}", scale);
+        }
+
+        if(convar.Name == "zms_infect_knockback_jump_scale")
+        {
+            var scale = convar.GetFloat();
+            _knockback.SetJumpKnockbackScale(scale);
+            //_modsharp.PrintToChatAll($"ConVar: zms_infect_knockback_jump_scale set to {scale}");
+            _logger.LogInformation("Jump Scale is set to {scale}", scale);
         }
 
         if(convar.Name == "zms_respawn_enabled")
