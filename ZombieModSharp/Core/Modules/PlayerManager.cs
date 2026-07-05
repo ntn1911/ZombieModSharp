@@ -88,4 +88,5 @@ public class Player
     public Guid RegenerationTimer { get; set; } = Guid.Empty;
     public int LeaderVoteCount { get; set; } = 0;
     public IGameClient? LeaderVotedTarget { get; set; } = null;
+    public bool InfiniteAmmo { get; set; } = false;
 }

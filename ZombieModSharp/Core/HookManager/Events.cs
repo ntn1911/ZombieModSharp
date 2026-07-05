@@ -308,6 +308,7 @@ public class Events : IEvents
     private void OnWeaponFired(IGameEvent fired)
     {
         var pawn = fired.GetPlayerPawn("userid");
+        var client = fired.GetPlayerController("userid")?.GetGameClient();
 
         var weapon = pawn?.GetWeaponService()?.ActiveWeapon;
         // _modSharp.PrintToChatAll("Fired");
@@ -316,6 +317,11 @@ public class Events : IEvents
         {
             //_modSharp.PrintToChatAll("Change");
             weapon.ReserveAmmo += 1;
+
+            if(client != null && _playerManager.GetOrCreatePlayer(client).InfiniteAmmo)
+            {
+                weapon.Clip = weapon.MaxClip;
+            }
         }
     }
 }

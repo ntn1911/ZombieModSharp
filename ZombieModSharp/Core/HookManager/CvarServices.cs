@@ -56,6 +56,10 @@ public class CvarServices : ICvarServices
 
         CvarList["Cvar_ZTeleAllow"] = _conVarManager.CreateConVar("zms_ztele_allow", true, "Allow Ztele command or not", ConVarFlags.Release);
         CvarList["Cvar_ZTeleDelay"] = _conVarManager.CreateConVar("zms_ztele_delay", 5.0f, "Delay timer before player can get teleported with ztele command", ConVarFlags.Release);
+
+        CvarList["Cvar_ZAmmoAllow"] = _conVarManager.CreateConVar("zms_zammo_allow", true, "Allow zammo command or not", ConVarFlags.Release);
+        CvarList["Cvar_ZAmmoCost"] = _conVarManager.CreateConVar("zms_zammo_cost", 7500, 0, 99999, "Cash cost to activate infinite ammo", ConVarFlags.Release);
+        CvarList["Cvar_ZAmmoDuration"] = _conVarManager.CreateConVar("zms_zammo_duration", 15.0f, 1.0f, 120.0f, "Duration (seconds) infinite ammo lasts", ConVarFlags.Release);
         // we check if covar existed or not.
         
         _conVarManager.InstallChangeHook(CvarList["Cvar_InfectKnockbackScale"]!, OnConVarChange);
