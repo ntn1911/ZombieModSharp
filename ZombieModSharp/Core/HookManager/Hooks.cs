@@ -114,24 +114,18 @@ public class Hooks : IHooks
         var client = param.Controller.GetGameClient();
         var victimPawn = param.Controller.AsPlayerPawn();
 
-        if (attacker == null || client == null)
+        if (client == null)
         {
             return result;
         }
-        var attackerPlayer = _playerManager.GetOrCreatePlayer(attacker);
         var victimPlayer = _playerManager.GetOrCreatePlayer(client);
 
-        // prevent infected stab to death for humans.
-        if(attackerPlayer.IsInfected() && victimPlayer.IsHuman())
-        {
-            param.Damage = 1;
-            return result;
-        }
-
+        // Molotov/inferno damage ticks often carry no valid AttackerPawnHandle, so this check
+        // must not depend on `attacker` being resolved, or self-ignite prevention never runs.
         if(victimPlayer.IsHuman())
         {
             var inflictor = _entityManager.FindEntityByHandle(param.InflictorHandle);
-            //_modsharp.PrintToChatAll($"Inflictor: {inflictor?.Classname} | Attacker: {attacker.Name} | Victim: {client.Name} | Owner: {inflictor?.OwnerEntity?.AsPlayerPawn()?.GetController()?.PlayerName}");
+            //_modsharp.PrintToChatAll($"Inflictor: {inflictor?.Classname} | Victim: {client.Name} | Owner: {inflictor?.OwnerEntity?.AsPlayerPawn()?.GetController()?.PlayerName}");
             if(inflictor?.Classname.Contains("inferno") ?? false )
             {
                 var owner = inflictor.OwnerEntity;
@@ -141,6 +135,19 @@ public class Hooks : IHooks
                     return new HookReturnValue<long>(EHookAction.SkipCallReturnOverride, 0);
                 }
             }
+        }
+
+        if (attacker == null)
+        {
+            return result;
+        }
+        var attackerPlayer = _playerManager.GetOrCreatePlayer(attacker);
+
+        // prevent infected stab to death for humans.
+        if(attackerPlayer.IsInfected() && victimPlayer.IsHuman())
+        {
+            param.Damage = 1;
+            return result;
         }
 
         if(attackerPlayer.IsHuman() && victimPlayer.IsInfected())
