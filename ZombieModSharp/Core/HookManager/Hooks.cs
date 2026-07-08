@@ -112,7 +112,7 @@ public class Hooks : IHooks
         var attacker = _entityManager.FindEntityByHandle(param.AttackerPawnHandle)?.GetOriginalController()?.GetGameClient();
 
         var client = param.Controller.GetGameClient();
-        var victimPawn = param.Controller.AsPlayerPawn();
+        var victimPawn = param.Controller.AsPlayerPawn(true);
 
         if (attacker == null || client == null)
         {
@@ -134,8 +134,7 @@ public class Hooks : IHooks
             //_modsharp.PrintToChatAll($"Inflictor: {inflictor?.Classname} | Attacker: {attacker.Name} | Victim: {client.Name} | Owner: {inflictor?.OwnerEntity?.AsPlayerPawn()?.GetController()?.PlayerName}");
             if(inflictor?.Classname.Contains("inferno") ?? false )
             {
-                var owner = inflictor.OwnerEntity;
-                if(owner?.AsPlayerPawn() == victimPawn && (victimPawn?.IsValid() ?? false))
+                if(attacker == client)
                 {
                     //_modsharp.PrintToChatAll($"Prevent self ignite for player {client.Name}");
                     return new HookReturnValue<long>(EHookAction.SkipCallReturnOverride, 0);
