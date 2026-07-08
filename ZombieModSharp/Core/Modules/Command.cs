@@ -552,6 +552,73 @@ public class Command : ICommand
         ReplyToCommand(client, $"AllowExtraGrenade: {player.AllowExtraGrenade}");
     }
 
+    private void InfiniteAmmoCommand(IGameClient? client, StringCommand command)
+    {
+        if (client == null || !client.IsValid) return;
+
+        var allow = _cvarServices.CvarList["Cvar_ZAmmoAllow"]?.GetBool();
+        if (allow.HasValue && !allow.Value)
+        {
+            ReplyToCommand(client, "This feature is not available.");
+            return;
+        }
+
+        var controller = client.GetPlayerController();
+        if (controller == null || !controller.IsValid())
+        {
+            ReplyToCommand(client, "Can't find any player controller");
+            return;
+        }
+
+        var pawn = controller.GetPlayerPawn();
+        if (pawn == null || !pawn.IsValid())
+        {
+            ReplyToCommand(client, "Can't find any player pawn");
+            return;
+        }
+
+        if (!pawn.IsAlive)
+        {
+            ReplyToCommand(client, "You need to be alive to use this command!");
+            return;
+        }
+
+        if (_infect.IsClientInfect(client))
+        {
+            ReplyToCommand(client, "Zombies can't use this!");
+            return;
+        }
+
+        var player = _playerManager.GetOrCreatePlayer(client);
+
+        if (player.InfiniteAmmo)
+        {
+            ReplyToCommand(client, "Infinite ammo is already active!");
+            return;
+        }
+
+        var cost = _cvarServices.CvarList["Cvar_ZAmmoCost"]?.GetInt() ?? 7500;
+        var duration = _cvarServices.CvarList["Cvar_ZAmmoDuration"]?.GetFloat() ?? 15.0f;
+        var money = controller.GetInGameMoneyService()?.Account;
+
+        if (money < cost)
+        {
+            ReplyToCommand(client, $"You don't have enough cash! (Required: {cost}$)");
+            return;
+        }
+
+        controller.GetInGameMoneyService()!.Account -= cost;
+        player.InfiniteAmmo = true;
+        ReplyToCommand(client, $"Infinite ammo activated for {duration} seconds!");
+
+        _modsharp.PushTimer(new Func<TimerAction>(() =>
+        {
+            player.InfiniteAmmo = false;
+            ReplyToCommand(client, "Infinite ammo has expired!");
+            return TimerAction.Continue;
+        }), duration, GameTimerFlags.StopOnRoundEnd | GameTimerFlags.StopOnMapEnd);
+    }
+
     private void ZSpawnCommand(IGameClient? client, StringCommand command)
     {
         if (client == null || !client.IsValid) return;
