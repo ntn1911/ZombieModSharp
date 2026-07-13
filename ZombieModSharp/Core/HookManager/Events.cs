@@ -188,6 +188,11 @@ public class Events : IEvents
         //_modSharp.PrintChannelAll(HudPrintChannel.Chat, $"The round just started");
         _infect.OnRoundStart();
 
+        foreach (var player in _playerManager.GetAllPlayers().Values)
+        {
+            player.InfiniteAmmo = false;
+        }
+
         if(_roundTimer != Guid.Empty)
         {
             _modSharp.StopTimer(_roundTimer);
@@ -207,6 +212,14 @@ public class Events : IEvents
         // _modSharp.PrintChannelAll(HudPrintChannel.Chat, $"The round just ended");
         RespawnServices.SetRespawnEnable(false);
         _infect.OnRoundEnd();
+
+        
+        foreach (var player in _playerManager.GetAllPlayers().Values )
+        {
+            player.InfiniteAmmo = false;
+        }
+        
+        
 
         if(_roundTimer != Guid.Empty)
         {

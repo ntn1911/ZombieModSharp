@@ -610,12 +610,12 @@ public class Command : ICommand
         controller.GetInGameMoneyService()!.Account -= cost;
         player.InfiniteAmmo = true;
         ReplyToCommand(client, $"Infinite ammo activated for {duration} seconds!");
-
+        
         _modsharp.PushTimer(new Func<TimerAction>(() =>
         {
             player.InfiniteAmmo = false;
             ReplyToCommand(client, "Infinite ammo has expired!");
-            return TimerAction.Continue;
+            return TimerAction.Stop;
         }), duration, GameTimerFlags.StopOnRoundEnd | GameTimerFlags.StopOnMapEnd);
     }
 
